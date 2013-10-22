@@ -46,12 +46,15 @@ public class MainActivity extends Activity {
 		
 		// large view
 		NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
-		inboxStyle.setBigContentTitle("Recent Clippings:");
+		inboxStyle.setBigContentTitle("Recall");
+		inboxStyle.setSummaryText("You have " + this.clipboardElements.size() + " clipping" + ((this.clipboardElements.size() != 1)? "s" : "") + ".");
+
 		
 		// default text
 		if(this.clipboardElements.size() == 0) {
 			inboxStyle.addLine((CharSequence) "You haven't copied anything yet!");
 		}
+		
 		
 		// iterate over elements
 		for(int i = this.clipboardElements.size() - 1; i >= 0; i--) {
