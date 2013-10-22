@@ -9,6 +9,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -52,8 +53,14 @@ public class RecentClippingsActivity extends Activity implements OnItemClickList
 		cManager.setPrimaryClip(newClip);
 		
 		// let the user know what happened
-		Toast.makeText(this, "Text copied to clipboard", Toast.LENGTH_SHORT).show();
+		Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
 		
+		
+		// let's vibrate .. you know ... for fun!
+		Vibrator vService = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+		vService.vibrate(175);
+		
+	
 		// we're finished -- we can close this running activity		
 		this.finish(); 
 		
