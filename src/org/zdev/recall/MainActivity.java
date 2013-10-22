@@ -48,22 +48,24 @@ public class MainActivity extends Activity {
 		NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
 		inboxStyle.setBigContentTitle("Recall");
 		inboxStyle.setSummaryText("You have " + this.clipboardElements.size() + " clipping" + ((this.clipboardElements.size() != 1)? "s" : "") + ".");
-
 		
 		// default text
 		if(this.clipboardElements.size() == 0) {
 			inboxStyle.addLine((CharSequence) "You haven't copied anything yet!");
 		}
 		
-		
 		// iterate over elements
 		for(int i = this.clipboardElements.size() - 1; i >= 0; i--) {
 			inboxStyle.addLine((CharSequence) this.clipboardElements.get(i));
 		}
 		
+		// apply large style
 		nBuilder.setStyle(inboxStyle);
 		
-
+		// this makes the notification persistent!
+		nBuilder.setOngoing(true);
+		
+		
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		// mId allows you to update the notification later on.
 		mNotificationManager.notify(1337, nBuilder.build());
