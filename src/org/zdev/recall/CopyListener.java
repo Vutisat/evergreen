@@ -4,7 +4,6 @@ import android.content.ClipboardManager;
 import android.content.ClipboardManager.OnPrimaryClipChangedListener;
 import android.text.SpannableString;
 import android.util.Log;
-import android.widget.Toast;
 
 public class CopyListener implements OnPrimaryClipChangedListener {
 
@@ -34,15 +33,11 @@ public class CopyListener implements OnPrimaryClipChangedListener {
 
 			// Get the most recent clipping off of the clipboard
 			String newClipping = new SpannableString(this.clipboardManager.getPrimaryClip().getItemAt(0).getText()).toString();
-			
-			
+		
 			// check for a proper length (non-empty string)
 			if(newClipping.length() > 0) {
 				this.parentInstance.addElementToList(newClipping);
 			}
-
-			// just debugging
-			// Toast.makeText(this.parentInstance, "New Text:" + newClipping, Toast.LENGTH_SHORT).show();
 
 		} catch (Exception e) {
 			Log.d("err", e.toString());
