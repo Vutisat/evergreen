@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -27,6 +27,11 @@ public class MainActivity extends Activity {
 
 		// refresh notification with last val + count
 		this.refreshNotification();
+		
+		// refresh parent
+		@SuppressWarnings("unchecked")
+		ArrayAdapter<String> cbAdapter = (ArrayAdapter<String>) ((ListView) findViewById(R.id.clipboardListView)).getAdapter();
+		cbAdapter.notifyDataSetChanged();
 
 	}
 
@@ -41,19 +46,11 @@ public class MainActivity extends Activity {
 		nBuilder.setContentText((this.clipboardElements.size() == 0) ? "Waiting for you to copy text"
 				: this.clipboardElements.get(this.clipboardElements.size() - 1));
 
-
 		// setup return intent
 		Intent overlayIntent = new Intent(this, RecentClippingsActivity.class);
-		overlayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-				| Intent.FLAG_ACTIVITY_CLEAR_TASK);
-		PendingIntent thePendingIntent = PendingIntent.getActivity(this, 0,
-				overlayIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
+		overlayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		PendingIntent thePendingIntent = PendingIntent.getActivity(this, 0, overlayIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 		nBuilder.setContentIntent(thePendingIntent);
-
-		// > TODO: setup return intent
-		// >
-		// (https://developer.android.com/guide/topics/ui/notifiers/notifications.html)
 
 		// large view
 		NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
@@ -89,7 +86,7 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
+		
 		// draw initial notification
 		this.refreshNotification();
 
@@ -101,25 +98,35 @@ public class MainActivity extends Activity {
 
 		// ...and specify our listener
 		clipboardManager.addPrimaryClipChangedListener(copyListener);
-
-		//
-		//
-		// testing !
-		//
-		//
-
-		//
-		// ListView copiedItemsList = new ListView(this);
-		// ArrayAdapter<String> itemAdapter = new ArrayAdapter<String>(this, 0,
-		// clipboardElements);
-		// copiedItemsList.setAdapter(itemAdapter);
-		//
-		//
-		// // testing this shit
-		// setContentView(copiedItemsList);
+		
+		
+		
+		/// displaying items
+		ListView listView = (ListView) findViewById(R.id.clipboardListView);
+		ArrayAdapter<String> cbAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, this.clipboardElements);
+		listView.setAdapter(cbAdapter);	
+		
+		
+		
+		// background service to avoid data loss
+		startService(new Intent(getApplicationContext(), RunningService.class));
 
 	}
 
+	@Override
+	protected void onStop() {
+		super.onStop();
+		Log.d("Recall", "Stopping");
+	}
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		
+		Log.d("Recall", "Resuming, DP: " + this.clipboardElements.size());
+	}
+	
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main, menu);
