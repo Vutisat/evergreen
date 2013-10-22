@@ -18,11 +18,15 @@ public class MainActivity extends Activity {
 		 * copied text changes so we can store it in memory.
 		 */
 		
-		// create instance of our copy listener (this will recieve events from the ClipboardManager
-		CopyListener copyListener = new CopyListener(this);
+
 
 		// grab the manager and specify our listener
 		ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+		
+		// create instance of our copy listener (this will receive events from the ClipboardManager
+		// also pass ClipboardManager instance because of context access ffs
+		CopyListener copyListener = new CopyListener(this, clipboardManager);
+		
 		clipboardManager.addPrimaryClipChangedListener(copyListener);
 		
 		
