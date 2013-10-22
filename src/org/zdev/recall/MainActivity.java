@@ -1,6 +1,8 @@
 package org.zdev.recall;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import android.app.Activity;
 import android.app.NotificationManager;
@@ -8,6 +10,7 @@ import android.app.PendingIntent;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -19,11 +22,18 @@ import android.widget.ListView;
 public class MainActivity extends Activity {
 
 	private ArrayList<String> clipboardElements = new ArrayList<String>();
+	
+	
+	public ArrayList<String> getClipboardElements() {
+		return this.clipboardElements;
+	}
 
 	public void addElementToList(String aValue) {
 
-		// append element
-		this.clipboardElements.add(aValue);
+		// append element -- prevent duplicates
+		if(this.clipboardElements.indexOf(aValue) == -1) {
+			this.clipboardElements.add(aValue);
+		}
 
 		// refresh notification with last val + count
 		this.refreshNotification();
@@ -32,6 +42,10 @@ public class MainActivity extends Activity {
 		@SuppressWarnings("unchecked")
 		ArrayAdapter<String> cbAdapter = (ArrayAdapter<String>) ((ListView) findViewById(R.id.clipboardListView)).getAdapter();
 		cbAdapter.notifyDataSetChanged();
+		
+		// put shared preferences
+		SharedPreferences sPreferences = this.getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+		sPreferences.edit().putStringSet("clipboardData", (Set<String>) new HashSet<String>(this.clipboardElements)).commit();
 
 	}
 
@@ -86,10 +100,7 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
-		// draw initial notification
-		this.refreshNotification();
-
+	
 		// grab the manager
 		ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 
@@ -100,6 +111,9 @@ public class MainActivity extends Activity {
 		clipboardManager.addPrimaryClipChangedListener(copyListener);
 		
 		
+		// retrieve any values
+		this.retrieveStoredClippings();
+	
 		
 		/// displaying items
 		ListView listView = (ListView) findViewById(R.id.clipboardListView);
@@ -107,23 +121,36 @@ public class MainActivity extends Activity {
 		listView.setAdapter(cbAdapter);	
 		
 		
-		
-		// background service to avoid data loss
-		startService(new Intent(getApplicationContext(), RunningService.class));
+		// draw initial notification -- this is placed after we retrieve values so the # displayed is correct
+		this.refreshNotification();
 
 	}
 
 	@Override
 	protected void onStop() {
-		super.onStop();
-		Log.d("Recall", "Stopping");
+		super.onStop();	
 	}
 	
 	@Override
 	protected void onStart() {
+
 		super.onStart();
 		
-		Log.d("Recall", "Resuming, DP: " + this.clipboardElements.size());
+		this.retrieveStoredClippings();
+	
+	}
+	
+	
+	private void retrieveStoredClippings() {
+		// retrieve shared preferences
+		SharedPreferences sPreferences = this.getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+		
+		HashSet<String> retrievalSet = (HashSet<String>) sPreferences.getStringSet("clipboardData", new HashSet<String>());
+		
+		this.clipboardElements.clear();
+		this.clipboardElements.addAll(retrievalSet);
+		
+		Log.d("New List Length:", this.clipboardElements.size() + "");
 	}
 	
 	

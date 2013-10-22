@@ -36,7 +36,6 @@
             android:theme="@android:style/Theme.Holo.Light.Dialog"
             android:label="@string/title_activity_recent_clippings">
         </activity>
-        <service android:name="RunningService" android:stopWithTask="false"></service>
     </application>
 
 </manifest>

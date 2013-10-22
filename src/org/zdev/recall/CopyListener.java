@@ -29,6 +29,8 @@ public class CopyListener implements OnPrimaryClipChangedListener {
 			 * have to create an instance of SpannableString which takes the
 			 * return value as a parameter and then converts it to a string.
 			 */
+			
+			// todo: better means of detecting multiple copies
 
 			// Get the most recent clipping off of the clipboard
 			String newClipping = new SpannableString(this.clipboardManager.getPrimaryClip().getItemAt(0).getText()).toString();
@@ -40,7 +42,7 @@ public class CopyListener implements OnPrimaryClipChangedListener {
 			}
 
 			// just debugging
-			Toast.makeText(this.parentInstance, "New Text:" + newClipping, Toast.LENGTH_SHORT).show();
+			// Toast.makeText(this.parentInstance, "New Text:" + newClipping, Toast.LENGTH_SHORT).show();
 
 		} catch (Exception e) {
 			Log.d("err", e.toString());
