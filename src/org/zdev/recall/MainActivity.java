@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +13,8 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 public class MainActivity extends Activity {
 
@@ -28,46 +32,55 @@ public class MainActivity extends Activity {
 
 	public void refreshNotification() {
 
-		// setup notification icon
-		NotificationCompat.Builder nBuilder = new NotificationCompat.Builder(
-				this)
-				.setSmallIcon(R.drawable.ic_launcher)
-				.setContentTitle("Recall")
-				.setContentText(
-						(this.clipboardElements.size() == 0) ? "Waiting for you to copy text"
-								: this.clipboardElements
-										.get(this.clipboardElements.size() - 1))
-				.setContentInfo(
-						(CharSequence) (this.clipboardElements.size() + ""));
+		// Setup notification
+		NotificationCompat.Builder nBuilder = new NotificationCompat.Builder(this);
+		nBuilder.setSmallIcon(R.drawable.ic_launcher);
+		nBuilder.setContentTitle("Recall");
+		nBuilder.setContentInfo((CharSequence) (this.clipboardElements.size() + ""));
+		nBuilder.setNumber(this.clipboardElements.size());
+		nBuilder.setContentText((this.clipboardElements.size() == 0) ? "Waiting for you to copy text"
+				: this.clipboardElements.get(this.clipboardElements.size() - 1));
 
-		// TODO: setup return intent
+
+		// setup return intent
+		Intent overlayIntent = new Intent(this, RecentClippingsActivity.class);
+		overlayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+				| Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		PendingIntent thePendingIntent = PendingIntent.getActivity(this, 0,
+				overlayIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		nBuilder.setContentIntent(thePendingIntent);
+
+		// > TODO: setup return intent
+		// >
 		// (https://developer.android.com/guide/topics/ui/notifiers/notifications.html)
-		// Intent resultIntent = new Intent(this, MainActivity.class);
-		
+
 		// large view
 		NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
 		inboxStyle.setBigContentTitle("Recall");
-		inboxStyle.setSummaryText("You have " + this.clipboardElements.size() + " clipping" + ((this.clipboardElements.size() != 1)? "s" : "") + ".");
-		
+		inboxStyle.setSummaryText("You have " + this.clipboardElements.size()
+				+ " clipping"
+				+ ((this.clipboardElements.size() != 1) ? "s" : "") + ".");
+
 		// default text
-		if(this.clipboardElements.size() == 0) {
-			inboxStyle.addLine((CharSequence) "You haven't copied anything yet!");
+		if (this.clipboardElements.size() == 0) {
+			inboxStyle
+					.addLine((CharSequence) "You haven't copied anything yet!");
 		}
-		
+
 		// iterate over elements
-		for(int i = this.clipboardElements.size() - 1; i >= 0; i--) {
+		for (int i = this.clipboardElements.size() - 1; i >= 0; i--) {
 			inboxStyle.addLine((CharSequence) this.clipboardElements.get(i));
 		}
-		
+
 		// apply large style
 		nBuilder.setStyle(inboxStyle);
-		
+
 		// this makes the notification persistent!
 		nBuilder.setOngoing(true);
-		
-		
+
+		// display notification
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		// mId allows you to update the notification later on.
 		mNotificationManager.notify(1337, nBuilder.build());
 
 	}
@@ -88,6 +101,22 @@ public class MainActivity extends Activity {
 
 		// ...and specify our listener
 		clipboardManager.addPrimaryClipChangedListener(copyListener);
+
+		//
+		//
+		// testing !
+		//
+		//
+
+		//
+		// ListView copiedItemsList = new ListView(this);
+		// ArrayAdapter<String> itemAdapter = new ArrayAdapter<String>(this, 0,
+		// clipboardElements);
+		// copiedItemsList.setAdapter(itemAdapter);
+		//
+		//
+		// // testing this shit
+		// setContentView(copiedItemsList);
 
 	}
 
