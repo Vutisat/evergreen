@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
 		SharedPreferences sPreferences = this.getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
 		sPreferences.edit().putStringSet("clipboardData", (Set<String>) new HashSet<String>(this.clipboardElements)).commit();
 
+		
 	}
 
 	public void refreshNotification() {
@@ -142,6 +143,7 @@ public class MainActivity extends Activity {
 	
 	
 	private void retrieveStoredClippings() {
+		
 		// retrieve shared preferences
 		SharedPreferences sPreferences = this.getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
 		
@@ -173,6 +175,16 @@ public class MainActivity extends Activity {
 			Intent settingsIntent = new Intent(this, SettingsActivity.class);
 			startActivityForResult(settingsIntent, 1);
 
+			break;
+			
+		case R.id.action_exit:
+			
+			// clear all notifications
+			NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+			mNotificationManager.cancelAll();			
+			
+			// terminate activity
+			this.finish();
 			break;
 
 		}
