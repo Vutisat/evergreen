@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -32,10 +33,17 @@ public class RecentClippingsActivity extends Activity implements OnItemClickList
 		/// displaying items
 		ListView listView = (ListView) findViewById(R.id.recentClippingsList);
 		ArrayAdapter<String> cbAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, this.clipboardElements);
-		listView.setAdapter(cbAdapter);
 		listView.setClickable(true);
 		listView.setOnItemClickListener(this);
 		
+		// create button to allow "cancel"
+		Button cancelButton = new Button(this);
+		cancelButton.setText("Cancel");
+		listView.addFooterView(cancelButton);
+
+		// set adapter
+		listView.setAdapter(cbAdapter);
+
 	}
 	
 	

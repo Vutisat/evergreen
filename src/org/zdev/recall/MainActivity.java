@@ -34,6 +34,14 @@ public class MainActivity extends Activity {
 		if(this.clipboardElements.indexOf(aValue) == -1) {
 			this.clipboardElements.add(aValue);
 		}
+		
+		
+		// check check check
+		//SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+		//sharedPref.getBoolean(SettingsActivity.KEY_AUTO_DELETE, false;)
+
+		
+		
 
 		// refresh notification with last val + count
 		this.refreshNotification();
@@ -65,7 +73,15 @@ public class MainActivity extends Activity {
 		Intent overlayIntent = new Intent(this, RecentClippingsActivity.class);
 		overlayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 		PendingIntent thePendingIntent = PendingIntent.getActivity(this, 0, overlayIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-		nBuilder.setContentIntent(thePendingIntent);
+		
+		
+		// only issue an intent if there are elements to display
+		if(clipboardElements.size() > 0) {
+			nBuilder.setContentIntent(thePendingIntent);
+		}
+		
+		
+		
 
 		// large view
 		NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();

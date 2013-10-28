@@ -24,9 +24,9 @@ public class ClippedItem {
 	public String getContents() {
 		return this.clippingContents;
 	}
-
-	public String toString() {
-		return this.clippingContents;
-	}
+//
+//	public String toString() {
+//		return this.clippingContents;
+//	}
 
 }
