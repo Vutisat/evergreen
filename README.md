@@ -16,3 +16,7 @@ Thiti (Pob) Vutisalchavakul
 
 The purpose of Evergreen:
 Purpose of this project is to work through an Agile process to develop a piece of software that has maximum satisfaction to the customer.
+
+
+More information:
+Recall uses the copy function on the android phone and puts it into a clipboard. You can access this clipboard to paste old things you've copied.
