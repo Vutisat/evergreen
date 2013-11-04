@@ -41,6 +41,12 @@
             android:launchMode="singleTask"
             android:theme="@android:style/Theme.Holo.Light.Dialog" >
         </activity>
+        
+        <activity
+            android:name="org.zdev.recall.CopyActivity"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask" >
+        </activity>
 
         <receiver
             android:name=".receiver.StartMyServiceAtBootReceiver"

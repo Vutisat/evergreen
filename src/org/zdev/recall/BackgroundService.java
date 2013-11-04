@@ -14,21 +14,25 @@ import android.support.v4.app.NotificationCompat;
 import android.text.SpannableString;
 import android.util.Log;
 
-public class BackgroundService extends Service implements
-		OnPrimaryClipChangedListener {
+public class BackgroundService extends Service implements OnPrimaryClipChangedListener {
 
 	// for recalling / editing our notification
-	private final static int NOTIFICATION_ID = 1337;
-	
+	private final static int		NOTIFICATION_ID	= 1337;
+
 	// actual data
-	private LinkedList<ClippedItem> clippedItems = new LinkedList<ClippedItem>();
-	
+	private LinkedList<ClippedItem>	clippedItems	= new LinkedList<ClippedItem>();
+
 	// instance of the clipboard manager
-	ClipboardManager clipboardManager;
+	ClipboardManager				clipboardManager;
+
+	DatabaseHandler					dbHandler;
 
 	public void onCreate() {
 
 		super.onCreate();
+
+		// database interface instance
+		this.dbHandler = new DatabaseHandler(this);
 
 		/**
 		 * Ok, we've delegated that this background service will be responsible
@@ -41,18 +45,17 @@ public class BackgroundService extends Service implements
 
 		// ...and specify our listener
 		clipboardManager.addPrimaryClipChangedListener(this);
-		
+
 		// draw notification
 		this.redrawNotification();
-		
+
 	}
-	
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		return null;	
+		return null;
 	}
-	
+
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
@@ -61,9 +64,9 @@ public class BackgroundService extends Service implements
 
 	@Override
 	public void onPrimaryClipChanged() {
-		
+
 		Log.d("BackgroundService", "New Item On Clipboard!");
-		
+
 		// fucking java
 		try {
 
@@ -74,26 +77,36 @@ public class BackgroundService extends Service implements
 			 * have to create an instance of SpannableString which takes the
 			 * return value as a parameter and then converts it to a string.
 			 */
-			
+
 			// TODO: better means of detecting multiple copies
 
 			// Get the most recent clipping off of the clipboard
-			String clippingText = new SpannableString(this.clipboardManager.getPrimaryClip().getItemAt(0).getText()).toString();
-		
+			String clippingText = new SpannableString(this.clipboardManager.getPrimaryClip().getItemAt(0).getText())
+					.toString();
+
 			// check for a proper length (non-empty string)
-			if(clippingText.length() > 0) {
-				for(ClippedItem anItem : this.clippedItems) { // check for string already present
-					if(anItem.getContents().equals(clippingText)) return;
+			if (clippingText.length() > 0) {
+				for (ClippedItem anItem : this.clippedItems) {
+					if (anItem.getContents().equals(clippingText)) return;
 				}
-				this.clippedItems.addFirst(new ClippedItem(clippingText)); // push to front
+
+				// add to database
+				this.dbHandler.addItem(new ClippedItem(clippingText));
+
+				// push to front
+				this.clippedItems.addFirst(new ClippedItem(clippingText));
 				Log.d("BackgroundService", "Item Added!");
+
+				// attempt to get all
+				Log.d("BackgroundDBLength:", this.dbHandler.getAllItems().size() + "");
+
 			}
-			
+
 			// redraw the notification to reflect copied text
 			this.redrawNotification();
 
 		} catch (Exception e) {
-			Log.d("err", e.toString());
+			Log.d("err", "err", e);
 		}
 	}
 
@@ -105,62 +118,48 @@ public class BackgroundService extends Service implements
 		nBuilder.setContentTitle("Recall");
 		nBuilder.setContentInfo((CharSequence) (this.clippedItems.size() + ""));
 		nBuilder.setNumber(this.clippedItems.size());
-		nBuilder.setContentText((this.clippedItems.size() == 0) ? "Waiting for you to copy text"
-				: this.clippedItems.get(this.clippedItems.size() - 1).getContents());
-		
-
-		
+		nBuilder.setContentText((this.clippedItems.size() == 0) ? "Waiting for you to copy text" : this.clippedItems
+				.get(this.clippedItems.size() - 1).getContents());
 
 		// setup return intent
 		Intent overlayIntent = new Intent(this, RecentClippingsActivity.class);
 		overlayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-		PendingIntent thePendingIntent = PendingIntent.getActivity(this, 0, overlayIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		PendingIntent thePendingIntent = PendingIntent.getActivity(this, 0, overlayIntent,
+				PendingIntent.FLAG_UPDATE_CURRENT);
 
 		// only issue an intent if there are elements to display
 		if (this.clippedItems.size() > 0) {
 			nBuilder.setContentIntent(thePendingIntent);
-			
-			// add copy intent
-			nBuilder.addAction(
-				R.drawable.add,
-				"Copy Last",
-				PendingIntent.getActivity(
-					this,
-					0,
-					new Intent(this, CopyActivity.class),
-					0
-				)
-			);
+
+			// we will only display this quick copy if there are more than 1
+			// items on the clopboard
+			// this is becuase it does not make sense to copy the previous
+			// clipping to the clipboard
+			// since it already is on there...
+			if (this.clippedItems.size() > 1) {
+
+				// add copy intent
+				nBuilder.addAction(R.drawable.add, "Quick Copy",
+						PendingIntent.getActivity(this, 0, new Intent(this, CopyActivity.class), 0));
+
+			}
+
 		}
-		
+
 		// display settings button
-	    nBuilder.addAction(
-    		R.drawable.settings,
-    		"Settings",
-    		PendingIntent.getActivity(
-    			this,
-    			0,
-    			new Intent(
-    				this,
-    				SettingsActivity.class
-    			),
-    			0
-    		)
-    	);
+		nBuilder.addAction(R.drawable.settings, "Settings",
+				PendingIntent.getActivity(this, 0, new Intent(this, SettingsActivity.class), 0));
 
 		// large view
 		NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
 		inboxStyle.setBigContentTitle("Recall");
-//		inboxStyle.setSummaryText("You have " + this.clippedItems.size()
-//				+ " clipping"
-//				+ ((this.clippedItems.size() != 1) ? "s" : "") + ".");
+		// inboxStyle.setSummaryText("You have " + this.clippedItems.size()
+		// + " clipping"
+		// + ((this.clippedItems.size() != 1) ? "s" : "") + ".");
 
-		
-		
 		// default text
 		if (this.clippedItems.size() == 0) {
-			inboxStyle
-					.addLine((CharSequence) "You haven't copied anything yet!");
+			inboxStyle.addLine((CharSequence) "You haven't copied anything yet!");
 		}
 
 		// iterate over elements

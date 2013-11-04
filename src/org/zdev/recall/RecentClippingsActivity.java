@@ -1,13 +1,11 @@
 package org.zdev.recall;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedList;
 
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.view.View;
@@ -20,7 +18,7 @@ import android.widget.Toast;
 
 public class RecentClippingsActivity extends Activity implements OnItemClickListener {
 	
-	private ArrayList<String> clipboardElements = new ArrayList<String>();
+	private LinkedList<ClippedItem> clipboardElements = new LinkedList<ClippedItem>();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -30,19 +28,25 @@ public class RecentClippingsActivity extends Activity implements OnItemClickList
 		// load up clipboard data
 		this.retrieveStoredClippings();
 		
-		/// displaying items
+		// TODO: create list of strings instead of ClippedItems
+		
+		
+//		// displaying items
 		ListView listView = (ListView) findViewById(R.id.recentClippingsList);
-		ArrayAdapter<String> cbAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, this.clipboardElements);
-		listView.setClickable(true);
-		listView.setOnItemClickListener(this);
+//		ArrayAdapter<String> cbAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, this.clipboardElements);
+//		listView.setClickable(true);
+//		listView.setOnItemClickListener(this);
 		
 		// create button to allow "cancel"
 		Button cancelButton = new Button(this);
 		cancelButton.setText("Cancel");
 		listView.addFooterView(cancelButton);
+		
+		// TODO: add listener for cancel button to close window
+		
 
-		// set adapter
-		listView.setAdapter(cbAdapter);
+//		// set adapter
+//		listView.setAdapter(cbAdapter);
 
 	}
 	
@@ -63,12 +67,10 @@ public class RecentClippingsActivity extends Activity implements OnItemClickList
 		// let the user know what happened
 		Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
 		
-		
 		// let's vibrate .. you know ... for fun!
 		Vibrator vService = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		vService.vibrate(175);
 		
-	
 		// we're finished -- we can close this running activity		
 		this.finish(); 
 		
@@ -77,12 +79,15 @@ public class RecentClippingsActivity extends Activity implements OnItemClickList
 	
 	private void retrieveStoredClippings() {
 		
-		// retrieve shared preferences
-		SharedPreferences sPreferences = this.getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-		HashSet<String> retrievalSet = (HashSet<String>) sPreferences.getStringSet("clipboardData", new HashSet<String>());
 		
-		this.clipboardElements.clear();
-		this.clipboardElements.addAll(retrievalSet);
+		// TODO: use new storage backend
+		
+//		// retrieve shared preferences
+//		SharedPreferences sPreferences = this.getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+//		HashSet<String> retrievalSet = (HashSet<String>) sPreferences.getStringSet("clipboardData", new HashSet<String>());
+//		
+//		this.clipboardElements.clear();
+//		this.clipboardElements.addAll(retrievalSet);
 	
 	}
 
