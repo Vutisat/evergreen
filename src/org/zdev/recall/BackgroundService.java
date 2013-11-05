@@ -28,6 +28,8 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 	DatabaseHandler					dbHandler;
 
 	public void onCreate() {
+		
+		Log.d("BackgroundService", "Background Service Created");
 
 		super.onCreate();
 
@@ -95,13 +97,21 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 			// TODO: better means of detecting multiple copies
 
 			// Get the most recent clipping off of the clipboard
-			String clippingText = new SpannableString(this.clipboardManager.getPrimaryClip().getItemAt(0).getText())
-					.toString();
+			String clippingText =
+				new SpannableString(
+					this.clipboardManager.getPrimaryClip().getItemAt(0).getText()
+				).toString();
+			
+			// reload the items in memory -- allows for more accurate comparisons even if multiple threads happen to be spawned...
+			
 
 			// check for a proper length (non-empty string)
 			if (clippingText.length() > 0) {
 				for (ClippedItem anItem : this.clippedItems) {
-					if (anItem.getContents().equals(clippingText)) return;
+					if (anItem.getContents().equals(clippingText)) {
+						Log.d("BackgroundService", "Duplicate Detected!");
+						return;
+					}
 				}
 
 				// add to database
@@ -143,33 +153,33 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 
 		// only issue an intent if there are elements to display
 		if (this.clippedItems.size() > 0) {
+			
+			// we do not need to show the user an empty list -- no intent if there are no items
 			nBuilder.setContentIntent(thePendingIntent);
 
-			// we will only display this quick copy if there are more than 1
-			// items on the clopboard
-			// this is becuase it does not make sense to copy the previous
-			// clipping to the clipboard
-			// since it already is on there...
 			if (this.clippedItems.size() > 1) {
 
 				// add copy intent
-				nBuilder.addAction(R.drawable.add, "Quick Copy",
-						PendingIntent.getActivity(this, 0, new Intent(this, CopyActivity.class), 0));
+				nBuilder.addAction(
+					R.drawable.add,
+					"Quick Copy",
+					PendingIntent.getActivity(this, 0, new Intent(this, CopyActivity.class), 0)
+				);
 
 			}
 
 		}
 
 		// display settings button
-		nBuilder.addAction(R.drawable.settings, "Settings",
-				PendingIntent.getActivity(this, 0, new Intent(this, SettingsActivity.class), 0));
+		nBuilder.addAction(
+			R.drawable.settings,
+			"Settings",
+			PendingIntent.getActivity(this, 0, new Intent(this, SettingsActivity.class), 0)
+		);
 
 		// large view
 		NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
 		inboxStyle.setBigContentTitle("Recall");
-		// inboxStyle.setSummaryText("You have " + this.clippedItems.size()
-		// + " clipping"
-		// + ((this.clippedItems.size() != 1) ? "s" : "") + ".");
 
 		// default text
 		if (this.clippedItems.size() == 0) {
