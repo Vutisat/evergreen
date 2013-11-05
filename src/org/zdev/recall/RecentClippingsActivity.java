@@ -1,6 +1,6 @@
 package org.zdev.recall;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.ClipData;
@@ -17,82 +17,78 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 public class RecentClippingsActivity extends Activity implements OnItemClickListener {
-	
-	private LinkedList<ClippedItem> clipboardElements = new LinkedList<ClippedItem>();
+
+	private ArrayList<String>	clipboardElements	= new ArrayList<String>();
+	DatabaseHandler				dbHandler;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_recent_clippings);
-		
+
+		// create new instance of database handler
+		this.dbHandler = new DatabaseHandler(this);
+
 		// load up clipboard data
 		this.retrieveStoredClippings();
-		
+
 		// TODO: create list of strings instead of ClippedItems
-		
-		
-//		// displaying items
+
+		// // displaying items
 		ListView listView = (ListView) findViewById(R.id.recentClippingsList);
-//		ArrayAdapter<String> cbAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, this.clipboardElements);
-//		listView.setClickable(true);
-//		listView.setOnItemClickListener(this);
-		
+		ArrayAdapter<String> cbAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, this.clipboardElements);
+		listView.setClickable(true);
+		listView.setOnItemClickListener(this);
+
 		// create button to allow "cancel"
 		Button cancelButton = new Button(this);
 		cancelButton.setText("Cancel");
 		listView.addFooterView(cancelButton);
-		
-		// TODO: add listener for cancel button to close window
-		
 
-//		// set adapter
-//		listView.setAdapter(cbAdapter);
+		// TODO: add listener for cancel button to close window
+
+		 // set adapter
+		 listView.setAdapter(cbAdapter);
 
 	}
-	
-	
+
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
 
 		ListView listView = (ListView) findViewById(R.id.recentClippingsList);
 		Object o = listView.getItemAtPosition(arg2);
-			
+
 		// grab clipboard manager again
 		ClipboardManager cManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-		
+
 		// create new clip and add as primary
 		ClipData newClip = ClipData.newPlainText("RecallCopy", o.toString());
 		cManager.setPrimaryClip(newClip);
-		
+
 		// let the user know what happened
 		Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
-		
+
 		// let's vibrate .. you know ... for fun!
 		Vibrator vService = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		vService.vibrate(175);
-		
-		// we're finished -- we can close this running activity		
-		this.finish(); 
-		
+
+		// we're finished -- we can close this running activity
+		this.finish();
+
 	}
-	
-	
+
 	private void retrieveStoredClippings() {
-		
-		
-		// TODO: use new storage backend
-		
-//		// retrieve shared preferences
-//		SharedPreferences sPreferences = this.getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-//		HashSet<String> retrievalSet = (HashSet<String>) sPreferences.getStringSet("clipboardData", new HashSet<String>());
-//		
-//		this.clipboardElements.clear();
-//		this.clipboardElements.addAll(retrievalSet);
-	
+
+		// reset local list
+		this.clipboardElements = new ArrayList<String>();
+
+		// go ahead and retrieve them from our SQLite db
+		ArrayList<ClippedItem> tempList = this.dbHandler.getAllItems();
+		for (ClippedItem anItem : tempList) {
+			this.clipboardElements.add(anItem.getContents());
+		}
+
 	}
-
-
-
-
 
 }

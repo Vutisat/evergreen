@@ -4,9 +4,9 @@ import android.content.ContentValues;
 
 public class ClippedItem {
 
-	private boolean pinnedClipping = false;
-	private String clippingContents;
-	private int itemId = -1;
+	private boolean	pinnedClipping	= false;
+	private String	clippingContents;
+	private int		itemId			= -1;
 
 	ClippedItem(String clippingContents) {
 		this.clippingContents = clippingContents;
@@ -45,21 +45,21 @@ public class ClippedItem {
 	public String getContents() {
 		return this.clippingContents;
 	}
-	
-	
+
 	public ContentValues getValuesForInsertion() {
-		
+
 		ContentValues cValues = new ContentValues();
-		
-		// only set the `id` field if it exists 
-		if(this.hasId()) cValues.put("id", this.getId());
-		
+
+		// only set the `id` field if it exists
+		if (this.hasId())
+			cValues.put("id", this.getId());
+
 		// other relevant information
 		cValues.put("text", this.getContents());
 		cValues.put("pinned", this.isPinned());
-		
+
 		return cValues;
-		
+
 	}
-	
+
 }

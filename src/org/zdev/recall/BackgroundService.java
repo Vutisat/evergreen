@@ -33,6 +33,7 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 
 		// database interface instance
 		this.dbHandler = new DatabaseHandler(this);
+		this.loadClippedItems();
 
 		/**
 		 * Ok, we've delegated that this background service will be responsible
@@ -50,6 +51,19 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 		this.redrawNotification();
 
 	}
+	
+	
+	
+	private void loadClippedItems() {
+		this.clippedItems.clear();
+		
+		for(ClippedItem anItem : this.dbHandler.getAllItems()) {
+			this.clippedItems.add(anItem);
+		}
+		
+	}
+	
+	
 
 	@Override
 	public IBinder onBind(Intent intent) {
