@@ -4,9 +4,16 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.app.NotificationManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -14,61 +21,118 @@ import android.widget.ListView;
 
 public class MainActivity extends Activity {
 
+	/*
+	 * By creating a handler, we are able to listen for incoming messenges and
+	 * then process them as needed.
+	 */
+	private static class IncomingHandler extends Handler {
+		@Override
+		public void handleMessage(Message msg) {
+			Log.d("MainActivity", "Handle Message");
+			System.out.println( ((ClippedItem) msg.obj).getContents() );
+		}
+	};
+	
+
 	private ArrayList<String>		clipboardElements	= new ArrayList<String>();
 	private DatabaseHandler			dbHandler;
 	private ArrayAdapter<String>	listAdapter;
+	
+	private Messenger incomingMessenger = new Messenger(new IncomingHandler());
+	private Messenger mService = null;
+	boolean serviceIsBound = false;
+	
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            mService = new Messenger(service);
+            serviceIsBound = true;
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            mService = null;
+            serviceIsBound = false;
+        }
+    };
+	
+	
+	
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+
 		// set up database interface
 		this.dbHandler = new DatabaseHandler(this);
-
+	
+		
+		Log.d("MainActivity", "onCreate");
+		
+			
 		// Display items
 		ListView listView = (ListView) findViewById(R.id.clipboardListView);
-		this.listAdapter = 
-			new ArrayAdapter<String>(
-				this,
-				android.R.layout.simple_list_item_1,
-				this.clipboardElements
-			);
+		this.listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, this.clipboardElements);
 		listView.setAdapter(this.listAdapter);
-		
+
 		// retrieve data
 		this.retrieveStoredClippings();
 		
-		// start background service
-		startService(new Intent(this, BackgroundService.class));
 		
+		
+		// create an intent and use it to spawn our background process (attach messenger)
+		Intent serviceIntent = new Intent(this, BackgroundService.class);
+		serviceIntent.putExtra("Messenger", this.incomingMessenger);
+		startService(serviceIntent);		
+
+
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
 	}
 
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+	}
+
+	
+	
 	private void retrieveStoredClippings() {
 
 		// reset local list
 		this.clipboardElements = new ArrayList<String>();
 
-		// go ahead and retrieve them from our SQLite db
-		for (ClippedItem anItem : this.dbHandler.getAllItems()) {
-			this.clipboardElements.add(anItem.getContents());
-		}
-		
+
+
 		// re-rendering parent view
-		this.listAdapter.notifyDataSetChanged();
+		//this.listAdapter.notifyDataSetChanged();
 
 	}
 
 	@Override
 	protected void onStop() {
 		super.onStop();
+        if (this.serviceIsBound) {
+            unbindService(this.mConnection);
+            this.serviceIsBound = false;
+        }
 	}
 
 	@Override
 	protected void onStart() {
 		super.onStart();
 		
+		Log.d("MainActivity", "onStart");
+		
 		this.retrieveStoredClippings();
+	    bindService(new Intent(this, BackgroundService.class), this.mConnection, Context.BIND_AUTO_CREATE);
 	}
 
 	@Override
@@ -109,5 +173,6 @@ public class MainActivity extends Activity {
 
 		return true;
 	}
+
 
 }

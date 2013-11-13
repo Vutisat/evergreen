@@ -9,12 +9,28 @@ import android.content.ClipboardManager;
 import android.content.ClipboardManager.OnPrimaryClipChangedListener;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
 import android.text.SpannableString;
 import android.util.Log;
 
 public class BackgroundService extends Service implements OnPrimaryClipChangedListener {
+	
+	
+	private static class IncomingHandler extends Handler {
+	    @Override
+	    public void handleMessage(Message msg) {
+	    	
+	    }
+	}
+	
+	
+	
+	
 
 	// for recalling / editing our notification
 	private final static int		NOTIFICATION_ID	= 1337;
@@ -23,19 +39,58 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 	private LinkedList<ClippedItem>	clippedItems	= new LinkedList<ClippedItem>();
 
 	// instance of the clipboard manager
-	ClipboardManager				clipboardManager;
+	private ClipboardManager				clipboardManager;
 
-	DatabaseHandler					dbHandler;
+	private DatabaseHandler					dbHandler;
 
+	
+    private final Messenger mMessenger = new Messenger(new IncomingHandler());
+    
+    private Messenger activityMessenger;
+
+	
+	
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		
+		if(intent != null) {
+			this.activityMessenger = intent.getParcelableExtra("Messenger");
+			
+			Message testMessage = new Message();
+			testMessage.obj = new ClippedItem("test 123");
+			
+			try {
+				this.activityMessenger.send(testMessage);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+			
+		}
+
+	    
+		System.out.println(this.activityMessenger);
+		
+	    return START_STICKY_COMPATIBILITY;
+	}
+	
+	
+	
 	public void onCreate() {
 		
-		Log.d("BackgroundService", "Background Service Created");
-
 		super.onCreate();
-
+				
+		
+		
+		
+		
+		
+		
 		// database interface instance
 		this.dbHandler = new DatabaseHandler(this);
 		this.loadClippedItems();
+		
+	
+			
 
 		/**
 		 * Ok, we've delegated that this background service will be responsible
@@ -69,13 +124,19 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		return null;
+		Log.d("BackgroundService", "onBind");
+        return mMessenger.getBinder();
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		Log.d("BackgroundService", "Being Destroyed!!!");
+		
+		// NOTE: you must unbind this on destroy or the listener will be
+		// leaked. This means that further copies will automatically start
+		// the background service listening again...not good!
+		this.clipboardManager.removePrimaryClipChangedListener(this); 
+		
 	}
 
 	@Override
