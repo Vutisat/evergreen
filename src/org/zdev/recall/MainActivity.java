@@ -1,6 +1,7 @@
 package org.zdev.recall;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import android.app.Activity;
 import android.app.NotificationManager;
@@ -13,6 +14,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,33 +31,32 @@ public class MainActivity extends Activity {
 		@Override
 		public void handleMessage(Message msg) {
 			Log.d("MainActivity", "Handle Message");
-			System.out.println( ((ClippedItem) msg.obj).getContents() );
+			
+			System.out.println(((ClippedItem) msg.obj).getClippingContents());
 		}
 	};
-	
 
-	private ArrayList<String>		clipboardElements	= new ArrayList<String>();
-	private DatabaseHandler			dbHandler;
+	private ArrayList<String>		temporaryClippedElements	= new ArrayList<String>();
 	private ArrayAdapter<String>	listAdapter;
-	
-	private Messenger incomingMessenger = new Messenger(new IncomingHandler());
-	private Messenger mService = null;
-	boolean serviceIsBound = false;
-	
-    private ServiceConnection mConnection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            mService = new Messenger(service);
-            serviceIsBound = true;
-        }
 
-        public void onServiceDisconnected(ComponentName className) {
-            mService = null;
-            serviceIsBound = false;
-        }
-    };
-	
-	
-	
+	private Messenger				incomingMessenger			= new Messenger(new IncomingHandler());
+	private Messenger				mService					= null;
+	boolean							serviceIsBound				= false;
+
+	private ServiceConnection		mConnection					= 
+		new ServiceConnection() {
+			public void onServiceConnected(
+					ComponentName className, IBinder service) {
+				mService = new Messenger(service);
+				serviceIsBound = true;
+			}
+
+			public void onServiceDisconnected(
+					ComponentName className) {
+				mService = null;
+				serviceIsBound = false;
+			}
+		};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -63,30 +64,29 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 
 		// set up database interface
-		this.dbHandler = new DatabaseHandler(this);
-	
-		
+		// this.dbHandler = new DatabaseHandler(this);
+
 		Log.d("MainActivity", "onCreate");
-		
-			
+
+		System.out.println("Current Time: " + new Date().getTime());
+
 		// Display items
 		ListView listView = (ListView) findViewById(R.id.clipboardListView);
-		this.listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, this.clipboardElements);
+		this.listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,
+				this.temporaryClippedElements);
 		listView.setAdapter(this.listAdapter);
 
 		// retrieve data
 		this.retrieveStoredClippings();
-		
-		
-		
-		// create an intent and use it to spawn our background process (attach messenger)
+
+		// create an intent and use it to spawn our background process (attach
+		// messenger)
 		Intent serviceIntent = new Intent(this, BackgroundService.class);
 		serviceIntent.putExtra("Messenger", this.incomingMessenger);
-		startService(serviceIntent);		
-
+		startService(serviceIntent);
 
 	}
-	
+
 	@Override
 	protected void onPause() {
 		super.onPause();
@@ -102,37 +102,40 @@ public class MainActivity extends Activity {
 		super.onResume();
 	}
 
-	
-	
 	private void retrieveStoredClippings() {
 
 		// reset local list
-		this.clipboardElements = new ArrayList<String>();
+		this.temporaryClippedElements = new ArrayList<String>();
 
-
+		try {
+			Message scRequest = new Message();
+			this.mService.send(scRequest);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
 
 		// re-rendering parent view
-		//this.listAdapter.notifyDataSetChanged();
+		// this.listAdapter.notifyDataSetChanged();
 
 	}
 
 	@Override
 	protected void onStop() {
 		super.onStop();
-        if (this.serviceIsBound) {
-            unbindService(this.mConnection);
-            this.serviceIsBound = false;
-        }
+		if (this.serviceIsBound) {
+			unbindService(this.mConnection);
+			this.serviceIsBound = false;
+		}
 	}
 
 	@Override
 	protected void onStart() {
 		super.onStart();
-		
+
 		Log.d("MainActivity", "onStart");
-		
+
 		this.retrieveStoredClippings();
-	    bindService(new Intent(this, BackgroundService.class), this.mConnection, Context.BIND_AUTO_CREATE);
+		bindService(new Intent(this, BackgroundService.class), this.mConnection, Context.BIND_AUTO_CREATE);
 	}
 
 	@Override
@@ -173,6 +176,5 @@ public class MainActivity extends Activity {
 
 		return true;
 	}
-
 
 }

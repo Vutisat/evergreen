@@ -1,7 +1,5 @@
 package org.zdev.recall;
 
-import java.util.LinkedList;
-
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -16,135 +14,63 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
 import android.text.SpannableString;
-import android.util.Log;
 
 public class BackgroundService extends Service implements OnPrimaryClipChangedListener {
-	
-	
-	private static class IncomingHandler extends Handler {
-	    @Override
-	    public void handleMessage(Message msg) {
-	    	
-	    }
-	}
-	
-	
-	
-	
 
-	// for recalling / editing our notification
-	private final static int		NOTIFICATION_ID	= 1337;
+	//
+	// Notification access, clipboard listening, and data access
+	// --------------------------------------------------------------------------------
+	private final static int	NOTIFICATION_ID	= 1337;
+	private ClipboardManager	clipboardManager;
+	private DataInterface		dataInterface;
 
-	// actual data
-	private LinkedList<ClippedItem>	clippedItems	= new LinkedList<ClippedItem>();
+	//
+	// Intra-process communication devices
+	// --------------------------------------------------------------------------------
+	private final Messenger		mMessenger		= new Messenger(new IncomingHandler());
+	private Messenger			activityMessenger;
 
-	// instance of the clipboard manager
-	private ClipboardManager				clipboardManager;
-
-	private DatabaseHandler					dbHandler;
-
-	
-    private final Messenger mMessenger = new Messenger(new IncomingHandler());
-    
-    private Messenger activityMessenger;
-
-	
-	
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		
-		if(intent != null) {
-			this.activityMessenger = intent.getParcelableExtra("Messenger");
-			
-			Message testMessage = new Message();
-			testMessage.obj = new ClippedItem("test 123");
-			
-			try {
-				this.activityMessenger.send(testMessage);
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
-			
-		}
-
-	    
-		System.out.println(this.activityMessenger);
-		
-	    return START_STICKY_COMPATIBILITY;
-	}
-	
-	
-	
+	/**
+	 * This is the function that is called when this background service is
+	 * created. In here, we go ahead and set up what we need to in order to
+	 * access our data and manage the listener for new data on the clipboard.
+	 * 
+	 * This is also where we go ahead and initially draw the notification.
+	 */
 	public void onCreate() {
-		
 		super.onCreate();
-				
-		
-		
-		
-		
-		
-		
-		// database interface instance
-		this.dbHandler = new DatabaseHandler(this);
-		this.loadClippedItems();
-		
-	
-			
 
-		/**
-		 * Ok, we've delegated that this background service will be responsible
-		 * for listening for changes of the clipboard and managing the data
-		 * accordingly.
-		 */
-
-		// grab the manager
 		this.clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-
-		// ...and specify our listener
 		clipboardManager.addPrimaryClipChangedListener(this);
 
-		// draw notification
 		this.redrawNotification();
 
 	}
-	
-	
-	
-	private void loadClippedItems() {
-		this.clippedItems.clear();
-		
-		for(ClippedItem anItem : this.dbHandler.getAllItems()) {
-			this.clippedItems.add(anItem);
-		}
-		
-	}
-	
-	
 
+	/**
+	 * When an activity issues `bindService` this method is called. It returns a
+	 * binder so that the activity can then communicate with the background
+	 * service.
+	 */
 	@Override
 	public IBinder onBind(Intent intent) {
-		Log.d("BackgroundService", "onBind");
-        return mMessenger.getBinder();
+		return mMessenger.getBinder();
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		
+
 		// NOTE: you must unbind this on destroy or the listener will be
 		// leaked. This means that further copies will automatically start
 		// the background service listening again...not good!
-		this.clipboardManager.removePrimaryClipChangedListener(this); 
-		
+		this.clipboardManager.removePrimaryClipChangedListener(this);
+
 	}
 
 	@Override
 	public void onPrimaryClipChanged() {
 
-		Log.d("BackgroundService", "New Item On Clipboard!");
-
-		// fucking java
 		try {
 
 			/*
@@ -155,35 +81,16 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 			 * return value as a parameter and then converts it to a string.
 			 */
 
-			// TODO: better means of detecting multiple copies
-
 			// Get the most recent clipping off of the clipboard
-			String clippingText =
-				new SpannableString(
-					this.clipboardManager.getPrimaryClip().getItemAt(0).getText()
-				).toString();
-			
-			// reload the items in memory -- allows for more accurate comparisons even if multiple threads happen to be spawned...
-			
+			String clippingText = new SpannableString(this.clipboardManager.getPrimaryClip().getItemAt(0).getText())
+					.toString();
 
-			// check for a proper length (non-empty string)
-			if (clippingText.length() > 0) {
-				for (ClippedItem anItem : this.clippedItems) {
-					if (anItem.getContents().equals(clippingText)) {
-						Log.d("BackgroundService", "Duplicate Detected!");
-						return;
-					}
-				}
+			// check for a proper length and the text doesn't currently exist in
+			// memory
+			if (clippingText.length() > 0 && !this.dataInterface.itemExists(new ClippedItem(clippingText))) {
 
-				// add to database
-				this.dbHandler.addItem(new ClippedItem(clippingText));
-
-				// push to front
-				this.clippedItems.addFirst(new ClippedItem(clippingText));
-				Log.d("BackgroundService", "Item Added!");
-
-				// attempt to get all
-				Log.d("BackgroundDBLength:", this.dbHandler.getAllItems().size() + "");
+				// add to our in-memory storage
+				this.dataInterface.addItem(new ClippedItem(clippingText));
 
 			}
 
@@ -191,7 +98,7 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 			this.redrawNotification();
 
 		} catch (Exception e) {
-			Log.d("err", "err", e);
+			// wat wat wat wat
 		}
 	}
 
@@ -201,10 +108,10 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 		NotificationCompat.Builder nBuilder = new NotificationCompat.Builder(this);
 		nBuilder.setSmallIcon(R.drawable.ic_launcher);
 		nBuilder.setContentTitle("Recall");
-		nBuilder.setContentInfo((CharSequence) (this.clippedItems.size() + ""));
-		nBuilder.setNumber(this.clippedItems.size());
-		nBuilder.setContentText((this.clippedItems.size() == 0) ? "Waiting for you to copy text" : this.clippedItems
-				.get(this.clippedItems.size() - 1).getContents());
+		nBuilder.setContentInfo((CharSequence) (this.dataInterface.length() + ""));
+		nBuilder.setNumber(this.dataInterface.length());
+		nBuilder.setContentText((this.dataInterface.length() == 0) ? "Waiting for you to copy text"
+				: this.dataInterface.getItem(this.dataInterface.length() - 1).getClippingContents());
 
 		// setup return intent
 		Intent overlayIntent = new Intent(this, RecentClippingsActivity.class);
@@ -213,43 +120,38 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 				PendingIntent.FLAG_UPDATE_CURRENT);
 
 		// only issue an intent if there are elements to display
-		if (this.clippedItems.size() > 0) {
-			
-			// we do not need to show the user an empty list -- no intent if there are no items
+		if (this.dataInterface.length() > 0) {
+
+			// we do not need to show the user an empty list -- no intent if
+			// there are no items
 			nBuilder.setContentIntent(thePendingIntent);
 
-			if (this.clippedItems.size() > 1) {
+			if (this.dataInterface.length() > 1) {
 
 				// add copy intent
-				nBuilder.addAction(
-					R.drawable.add,
-					"Quick Copy",
-					PendingIntent.getActivity(this, 0, new Intent(this, CopyActivity.class), 0)
-				);
+				nBuilder.addAction(R.drawable.add, "Quick Copy",
+						PendingIntent.getActivity(this, 0, new Intent(this, CopyActivity.class), 0));
 
 			}
 
 		}
 
 		// display settings button
-		nBuilder.addAction(
-			R.drawable.settings,
-			"Settings",
-			PendingIntent.getActivity(this, 0, new Intent(this, SettingsActivity.class), 0)
-		);
+		nBuilder.addAction(R.drawable.settings, "Settings",
+				PendingIntent.getActivity(this, 0, new Intent(this, SettingsActivity.class), 0));
 
 		// large view
 		NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
 		inboxStyle.setBigContentTitle("Recall");
 
 		// default text
-		if (this.clippedItems.size() == 0) {
+		if (this.dataInterface.length() == 0) {
 			inboxStyle.addLine((CharSequence) "You haven't copied anything yet!");
 		}
 
 		// iterate over elements
-		for (int i = this.clippedItems.size() - 1; i >= 0; i--) {
-			inboxStyle.addLine((CharSequence) this.clippedItems.get(i).getContents());
+		for (int i = 0; i < this.dataInterface.length(); i++) {
+			inboxStyle.addLine((CharSequence) this.dataInterface.getItem(i).getClippingContents());
 		}
 
 		// apply large style
@@ -262,6 +164,35 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.notify(BackgroundService.NOTIFICATION_ID, nBuilder.build());
 
+	}
+
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+
+		if (intent != null) {
+			this.activityMessenger = intent.getParcelableExtra("Messenger");
+
+			Message testMessage = new Message();
+			testMessage.obj = new ClippedItem("test 123");
+
+			try {
+				this.activityMessenger.send(testMessage);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		System.out.println(this.activityMessenger);
+
+		return START_STICKY_COMPATIBILITY;
+	}
+
+	private static class IncomingHandler extends Handler {
+		@Override
+		public void handleMessage(Message msg) {
+
+		}
 	}
 
 }

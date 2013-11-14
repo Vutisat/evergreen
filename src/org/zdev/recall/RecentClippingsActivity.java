@@ -19,16 +19,12 @@ import android.widget.Toast;
 public class RecentClippingsActivity extends Activity implements OnItemClickListener {
 
 	private ArrayList<String>	clipboardElements	= new ArrayList<String>();
-	DatabaseHandler				dbHandler;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_recent_clippings);
-
-		// create new instance of database handler
-		this.dbHandler = new DatabaseHandler(this);
 
 		// load up clipboard data
 		this.retrieveStoredClippings();
@@ -83,11 +79,6 @@ public class RecentClippingsActivity extends Activity implements OnItemClickList
 		// reset local list
 		this.clipboardElements = new ArrayList<String>();
 
-		// go ahead and retrieve them from our SQLite db
-		ArrayList<ClippedItem> tempList = this.dbHandler.getAllItems();
-		for (ClippedItem anItem : tempList) {
-			this.clipboardElements.add(anItem.getContents());
-		}
 
 	}
 
