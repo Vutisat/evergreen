@@ -6,6 +6,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_recent_clippings">Recent Clippings</string>
     <string name="action_exit">Exit</string>
+    <string name="action_clear_all">Remove All</string>
     <string name="Cancel">Cancel</string>
     <string name="pref_storage">Storage</string>
     <string name="pref_summary_auto_delete">Whether or not to remove old clippings.</string>

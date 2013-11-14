@@ -1,11 +1,13 @@
 package org.zdev.recall;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import android.app.Service;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 public class DataInterface {
 
@@ -18,6 +20,7 @@ public class DataInterface {
 	}
 	
 	public void addItem(ClippedItem anItem) {
+		Log.d("DataInterface", "Item Added");
 		this.clippedItems.addFirst(anItem);
 		this.writeClippedItemsToStorage();
 	}
@@ -56,6 +59,8 @@ public class DataInterface {
 	
 	private void writeClippedItemsToStorage() {
 		
+		Log.d("DataInterface", "Writing Data Out");
+		
 		Editor ciEditor = this.recallSharedPreferences.edit();
 		
 		//ciEditor.putStringSet("storedClippedItems", arg1)
@@ -67,6 +72,14 @@ public class DataInterface {
 			System.out.println(anItem.toString());
 		}
 		
+	}
+
+	public ArrayList<ClippedItem> getAllItems() {
+		ArrayList<ClippedItem> returnArray = new ArrayList<ClippedItem>();
+		for(ClippedItem anItem : this.clippedItems) {
+			returnArray.add(anItem);
+		}
+		return returnArray;
 	}
 	
 }

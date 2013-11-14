@@ -28,11 +28,30 @@ public class MainActivity extends Activity {
 	 * then process them as needed.
 	 */
 	private static class IncomingHandler extends Handler {
+		@SuppressWarnings("unchecked")
 		@Override
 		public void handleMessage(Message msg) {
 			Log.d("MainActivity", "Handle Message");
+			System.out.println(msg.what);
 			
-			System.out.println(((ClippedItem) msg.obj).getClippingContents());
+			switch(msg.what) {
+				
+				case 0:
+					
+					ArrayList<ClippedItem> returnedContents = (ArrayList<ClippedItem>) msg.obj;
+
+					System.out.println("Main Activity Got Contents; Length:" + returnedContents.size());
+					
+					break;
+					
+				default:
+				
+			}
+			
+			
+			
+			
+			//System.out.println(((ClippedItem) msg.obj).getClippingContents());
 		}
 	};
 
@@ -45,14 +64,15 @@ public class MainActivity extends Activity {
 
 	private ServiceConnection		mConnection					= 
 		new ServiceConnection() {
-			public void onServiceConnected(
-					ComponentName className, IBinder service) {
+			public void onServiceConnected(ComponentName className, IBinder service) {
 				mService = new Messenger(service);
 				serviceIsBound = true;
+				
+				retrieveStoredClippings(); // now that the service is bound, retrieve data
+				
 			}
 
-			public void onServiceDisconnected(
-					ComponentName className) {
+			public void onServiceDisconnected(ComponentName className) {
 				mService = null;
 				serviceIsBound = false;
 			}
@@ -63,27 +83,16 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		// set up database interface
-		// this.dbHandler = new DatabaseHandler(this);
-
-		Log.d("MainActivity", "onCreate");
-
-		System.out.println("Current Time: " + new Date().getTime());
-
-		// Display items
+		// create list view for displaying items that are cached in memory locally
 		ListView listView = (ListView) findViewById(R.id.clipboardListView);
-		this.listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,
-				this.temporaryClippedElements);
+		this.listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, this.temporaryClippedElements);
 		listView.setAdapter(this.listAdapter);
 
-		// retrieve data
-		this.retrieveStoredClippings();
-
-		// create an intent and use it to spawn our background process (attach
-		// messenger)
+		// create an intent and use it to spawn our background process
 		Intent serviceIntent = new Intent(this, BackgroundService.class);
 		serviceIntent.putExtra("Messenger", this.incomingMessenger);
 		startService(serviceIntent);
+		
 
 	}
 
@@ -109,6 +118,7 @@ public class MainActivity extends Activity {
 
 		try {
 			Message scRequest = new Message();
+			scRequest.what = 0; // request for all data
 			this.mService.send(scRequest);
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -133,9 +143,8 @@ public class MainActivity extends Activity {
 		super.onStart();
 
 		Log.d("MainActivity", "onStart");
-
-		this.retrieveStoredClippings();
 		bindService(new Intent(this, BackgroundService.class), this.mConnection, Context.BIND_AUTO_CREATE);
+
 	}
 
 	@Override
@@ -159,6 +168,16 @@ public class MainActivity extends Activity {
 
 				break;
 
+				
+			case R.id.action_clear_all:
+				
+				// remove all items
+				
+				// TODO:
+				
+				break;
+				
+				
 			case R.id.action_exit:
 
 				// clear all notifications

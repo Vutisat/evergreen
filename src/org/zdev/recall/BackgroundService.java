@@ -1,5 +1,6 @@
 package org.zdev.recall;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -40,6 +41,8 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 	public void onCreate() {
 		super.onCreate();
 
+		this.dataInterface = new DataInterface(this);
+
 		this.clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 		clipboardManager.addPrimaryClipChangedListener(this);
 
@@ -57,15 +60,18 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 		return mMessenger.getBinder();
 	}
 
+	/**
+	 * This event is fired when the background service is being destroyed. This
+	 * will happen when the user force closes the application or if we trigger
+	 * the application to close. It is important to note that in this function
+	 * we must unbind the listener currently assigned for the user's clipboard.
+	 * Otherwise, the listener will leak and if the user copies text our
+	 * background service will spawn again. This is not good!
+	 */
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-
-		// NOTE: you must unbind this on destroy or the listener will be
-		// leaked. This means that further copies will automatically start
-		// the background service listening again...not good!
 		this.clipboardManager.removePrimaryClipChangedListener(this);
-
 	}
 
 	@Override
@@ -110,8 +116,9 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 		nBuilder.setContentTitle("Recall");
 		nBuilder.setContentInfo((CharSequence) (this.dataInterface.length() + ""));
 		nBuilder.setNumber(this.dataInterface.length());
-		nBuilder.setContentText((this.dataInterface.length() == 0) ? "Waiting for you to copy text"
-				: this.dataInterface.getItem(this.dataInterface.length() - 1).getClippingContents());
+		nBuilder.setContentText((this.dataInterface.length() == 0) ? "No items in buffer" : this.dataInterface.getItem(
+				this.dataInterface.length() - 1).getClippingContents());
+		nBuilder.setWhen(0); // hide the bloody time
 
 		// setup return intent
 		Intent overlayIntent = new Intent(this, RecentClippingsActivity.class);
@@ -122,7 +129,7 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 		// only issue an intent if there are elements to display
 		if (this.dataInterface.length() > 0) {
 
-			// we do not need to show the user an empty list -- no intent if
+			// we do not need to show the user an empty list -- no purpose if
 			// there are no items
 			nBuilder.setContentIntent(thePendingIntent);
 
@@ -146,7 +153,7 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 
 		// default text
 		if (this.dataInterface.length() == 0) {
-			inboxStyle.addLine((CharSequence) "You haven't copied anything yet!");
+			inboxStyle.addLine((CharSequence) "Recently copied items will be displyed here");
 		}
 
 		// iterate over elements
@@ -166,32 +173,56 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 
 	}
 
+	/**
+	 * This function listens for something to start the background service. When
+	 * it does, the intent will be passed along with it. In this case, our
+	 * MainActivity passes a reference to a Messenger so that the Service can
+	 * communicate with the parent Activity.
+	 */
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 
 		if (intent != null) {
 			this.activityMessenger = intent.getParcelableExtra("Messenger");
-
-			Message testMessage = new Message();
-			testMessage.obj = new ClippedItem("test 123");
-
-			try {
-				this.activityMessenger.send(testMessage);
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
-
 		}
-
-		System.out.println(this.activityMessenger);
 
 		return START_STICKY_COMPATIBILITY;
 	}
 
-	private static class IncomingHandler extends Handler {
+	/**
+	 * This...probably should be put in a separate file. The fact that it is not
+	 * static means that it can be leaked, but because it is static it creates a
+	 * lot of unnecessary "requirements" in the parent class. Fucking Java.
+	 */
+	@SuppressLint("HandlerLeak")
+	private class IncomingHandler extends Handler {
 		@Override
 		public void handleMessage(Message msg) {
+			switch (msg.what) {
 
+			// Get All Clippings
+				case 0:
+
+					if (activityMessenger != null) {
+
+						try {
+							Message dataMessage = new Message();
+							dataMessage.what = 0;
+							dataMessage.obj = dataInterface.getAllItems();
+							activityMessenger.send(dataMessage);
+						} catch (RemoteException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+
+					}
+
+					break;
+
+				default:
+					// fuck you, you type-less piece of shit
+			}
+			System.out.println(msg.obj);
 		}
 	}
 

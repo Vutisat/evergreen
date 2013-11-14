@@ -9,9 +9,9 @@ import android.os.Parcelable;
 public class ClippedItem implements Parcelable, Serializable {
 
 	private static final long	serialVersionUID	= -4884294659081428938L;
-	private boolean	pinnedClipping	= false;
-	private String	clippingContents;
-	private long	creationDate;
+	private boolean				pinnedClipping		= false;
+	private String				clippingContents;
+	private long				creationDate;
 
 	protected ClippedItem(ClippedItem anItem) {
 		this.pinnedClipping = anItem.pinnedClipping;
@@ -55,19 +55,18 @@ public class ClippedItem implements Parcelable, Serializable {
 		this.creationDate = in.readLong();
 	}
 
-	public static final Parcelable.Creator<ClippedItem>	CREATOR	= 
-		new Parcelable.Creator<ClippedItem>() {
-			@Override
-			public ClippedItem createFromParcel(Parcel in) {
-				return new ClippedItem(in);
-			}
+	public static final Parcelable.Creator<ClippedItem>	CREATOR	= new Parcelable.Creator<ClippedItem>() {
+																	@Override
+																	public ClippedItem createFromParcel(Parcel in) {
+																		return new ClippedItem(in);
+																	}
 
-			@Override
-			public ClippedItem[] newArray(int size) {
-				return new ClippedItem[size];
-			}
+																	@Override
+																	public ClippedItem[] newArray(int size) {
+																		return new ClippedItem[size];
+																	}
 
-		};
+																};
 
 	public boolean isPinnedClipping() {
 		return pinnedClipping;
