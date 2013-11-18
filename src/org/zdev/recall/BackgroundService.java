@@ -200,7 +200,7 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 
-			// Get All Clippings
+				// Get All Clippings
 				case 0:
 
 					if (activityMessenger != null) {
@@ -211,18 +211,21 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 							dataMessage.obj = dataInterface.getAllItems();
 							activityMessenger.send(dataMessage);
 						} catch (RemoteException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 
 					}
 
 					break;
+					
+				// remove all clippings
+				case 1:
+					dataInterface.removeAll();
+					break;
 
 				default:
 					// fuck you, you type-less piece of shit
 			}
-			System.out.println(msg.obj);
 		}
 	}
 

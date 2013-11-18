@@ -8,7 +8,6 @@ import android.app.Service;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 public class DataInterface {
 
@@ -21,7 +20,6 @@ public class DataInterface {
 	}
 
 	public void addItem(ClippedItem anItem) {
-		Log.d("DataInterface", "Item Added");
 		this.clippedItems.addFirst(anItem);
 		this.writeClippedItemsToStorage();
 	}
@@ -40,7 +38,19 @@ public class DataInterface {
 
 	public void updateItem(int itemIndex, ClippedItem anItem) {
 		this.clippedItems.set(itemIndex, anItem);
+		this.writeClippedItemsToStorage();
 	}
+	
+	public void removeItem(int itemIndex){
+		this.clippedItems.remove(itemIndex);
+		this.writeClippedItemsToStorage();
+	}
+	
+	public void removeAll() {
+		this.clippedItems.clear();
+		this.writeClippedItemsToStorage();
+	}
+	
 
 	public int length() {
 		return this.clippedItems.size();

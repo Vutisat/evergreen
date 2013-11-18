@@ -96,7 +96,6 @@ public class MainActivity extends Activity {
 		
 		// set up local messenger
 		this.incomingMessenger = new Messenger(new IncomingHandler(this));
-
 		
 		// create list view for displaying items that are cached in memory locally
 		ListView listView = (ListView) findViewById(R.id.clipboardListView);
@@ -189,7 +188,13 @@ public class MainActivity extends Activity {
 				this.localClippedItems.clear();
 				this.listAdapter.notifyDataSetChanged();
 				
-				// TODO: empty local array list and send message to service
+				try {
+					Message scRequest = new Message();
+					scRequest.what = 1; // empty all
+					this.mService.send(scRequest);
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
 				
 				break;
 				
