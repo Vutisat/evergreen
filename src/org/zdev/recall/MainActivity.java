@@ -2,6 +2,7 @@ package org.zdev.recall;
 
 import java.util.ArrayList;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.ComponentName;
@@ -20,13 +21,22 @@ import android.view.MenuItem;
 import android.widget.ListView;
 
 public class MainActivity extends Activity {
+		
 
 	/*
 	 * By creating a handler, we are able to listen for incoming messenges and
 	 * then process them as needed.
 	 */
+	@SuppressLint("HandlerLeak")
 	private static class IncomingHandler extends Handler {
-		@SuppressWarnings("unchecked")
+		
+		private MainActivity parentReference;
+
+		public IncomingHandler(MainActivity parentReference){
+			super();
+			this.parentReference = parentReference;			
+		}
+		
 		@Override
 		public void handleMessage(Message msg) {
 			Log.d("MainActivity", "Handle Message");
@@ -38,22 +48,13 @@ public class MainActivity extends Activity {
 				case 0:
 					
 					// coerce into an array list
+					@SuppressWarnings("unchecked")
 					ArrayList<ClippedItem> returnedContents = (ArrayList<ClippedItem>) msg.obj;
-					
-					
-
-					System.out.println("Main Activity Got Contents; Length:" + returnedContents.size());
-					
+					parentReference.setListContents(returnedContents);
+							
 					break;
-					
-				default:
-				
+								
 			}
-			
-			
-			
-			
-			//System.out.println(((ClippedItem) msg.obj).getClippingContents());
 		}
 	};
 
@@ -61,7 +62,7 @@ public class MainActivity extends Activity {
 	private ArrayList<ClippedItem>  localClippedItems = new ArrayList<ClippedItem>();
 	private ClippedItemArrayAdapter	listAdapter;
 
-	private Messenger				incomingMessenger			= new Messenger(new IncomingHandler());
+	private Messenger				incomingMessenger;
 	private Messenger				mService					= null;
 	boolean							serviceIsBound				= false;
 
@@ -80,12 +81,21 @@ public class MainActivity extends Activity {
 				serviceIsBound = false;
 			}
 		};
+		
+	private void setListContents(ArrayList<ClippedItem> newData){
+		this.localClippedItems.clear();
+		this.localClippedItems.addAll(newData);
+		this.listAdapter.notifyDataSetChanged();
+	}
 
 		
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		// set up local messenger
+		this.incomingMessenger = new Messenger(new IncomingHandler(this));
 
 		
 		// create list view for displaying items that are cached in memory locally
@@ -176,6 +186,8 @@ public class MainActivity extends Activity {
 			case R.id.action_clear_all:
 				
 				// remove all items
+				this.localClippedItems.clear();
+				this.listAdapter.notifyDataSetChanged();
 				
 				// TODO: empty local array list and send message to service
 				

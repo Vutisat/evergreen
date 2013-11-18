@@ -49,8 +49,13 @@ public class DataInterface {
 	private LinkedList<ClippedItem> readClippedItemsFromStorage() {
 
 		try {
+			String readContents = this.recallSharedPreferences.getString("clippedItemList", null);
+			
+			// check for no stored items
+			if(readContents == null) return new LinkedList<ClippedItem>();
+			
 			@SuppressWarnings("unchecked")
-			LinkedList<ClippedItem> returnList =  (LinkedList<ClippedItem>) ObjectSerializer.deserialize(this.recallSharedPreferences.getString("clippedItemList", null));
+			LinkedList<ClippedItem> returnList =  (LinkedList<ClippedItem>) ObjectSerializer.deserialize(readContents);
 			return returnList;
 		} catch (IOException e) {
 			e.printStackTrace();
