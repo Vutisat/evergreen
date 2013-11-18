@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ClipboardManager;
 import android.content.ClipboardManager.OnPrimaryClipChangedListener;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -57,9 +58,6 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 	 */
 	@Override
 	public IBinder onBind(Intent intent) {
-		
-		System.out.println("Messenger?: " + intent.getParcelableExtra("Messenger"));
-		
 		return mMessenger.getBinder();
 	}
 
@@ -202,7 +200,7 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-
+				
 				// Get All Clippings
 				case 0:
 
@@ -223,8 +221,28 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 					
 				// remove all clippings
 				case 1:
+					redrawNotification(); // do this otherwise it'll still show
 					dataInterface.removeAll();
 					break;
+				
+				// get second-to-last
+				case 2:
+					
+					System.out.println("Message.replyto:" + msg.replyTo);
+
+					if(msg.replyTo != null){
+						Message sLastMessage = new Message();
+						sLastMessage.what = 2;
+						sLastMessage.obj = dataInterface.getSecondToLast();
+						try {
+							msg.replyTo.send(sLastMessage);
+						} catch (RemoteException e) {
+							e.printStackTrace();
+						}
+					}
+					
+					break;
+					
 
 				default:
 					// fuck you, you type-less piece of shit

@@ -42,6 +42,8 @@ public class MainActivity extends Activity {
 		@Override
 		public void handleMessage(Message msg) {
 			
+			System.out.println("Main -- Received Message");
+			
 			switch(msg.what) {
 				
 				// this is a response for "all data"
@@ -71,6 +73,8 @@ public class MainActivity extends Activity {
 			public void onServiceConnected(ComponentName className, IBinder service) {
 				mService = new Messenger(service);
 				serviceIsBound = true;
+				
+				System.out.println("Main -- Service Bound");
 				
 				retrieveStoredClippings(); // now that the service is bound, retrieve data
 				

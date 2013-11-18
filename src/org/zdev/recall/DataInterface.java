@@ -20,9 +20,7 @@ public class DataInterface {
 	}
 
 	public void addItem(ClippedItem anItem) {
-		for(ClippedItem currentItem : this.clippedItems){
-			if(anItem.getClippingContents() == currentItem.getClippingContents()) return;
-		}
+
 		this.clippedItems.addFirst(anItem);
 		
 		// should limit items?
@@ -48,8 +46,9 @@ public class DataInterface {
 
 	public boolean itemExists(ClippedItem incomingItem) {
 		for (ClippedItem anItem : this.clippedItems) {
-			if (anItem.getClippingContents() == incomingItem.getClippingContents())
+			if (anItem.getClippingContents().compareTo(incomingItem.getClippingContents()) == 0) {
 				return true;
+			}
 		}
 		return false;
 	}
@@ -67,6 +66,10 @@ public class DataInterface {
 	public void removeAll() {
 		this.clippedItems.clear();
 		this.writeClippedItemsToStorage();
+	}
+	
+	public ClippedItem getSecondToLast() {
+		return this.clippedItems.get(1);
 	}
 	
 
