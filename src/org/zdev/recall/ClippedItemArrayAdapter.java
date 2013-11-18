@@ -25,19 +25,20 @@ public class ClippedItemArrayAdapter extends ArrayAdapter<ClippedItem> {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		
-		System.out.println("Requested Position: " + position);
-		
+		// retrieve item being drawn
+		ClippedItem currentItem = this.listContents.get(position);
+
 		// get layout inflater from parent context
 		LayoutInflater layoutInflater = (LayoutInflater) this.parentContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		
 		// create a new list item view
-		View itemView = layoutInflater.inflate(R.layout.clipped_item_layout,  parent);
+		View itemView = layoutInflater.inflate(R.layout.clipped_item_layout,  null);
 		
 		// extract text view from list item
 		TextView clippingTextView = (TextView) itemView.findViewById(R.id.clippingContents);
 		
 		// set the clipping contents
-		clippingTextView.setText(this.listContents.get(position).getClippingContents());
+		clippingTextView.setText(currentItem.getClippingContents());
 		
 		
 		
