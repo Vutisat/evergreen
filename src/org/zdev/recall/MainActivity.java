@@ -41,8 +41,6 @@ public class MainActivity extends Activity {
 		
 		@Override
 		public void handleMessage(Message msg) {
-			Log.d("MainActivity", "Handle Message");
-			System.out.println(msg.what);
 			
 			switch(msg.what) {
 				

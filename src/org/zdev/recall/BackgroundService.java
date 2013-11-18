@@ -57,6 +57,9 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 	 */
 	@Override
 	public IBinder onBind(Intent intent) {
+		
+		System.out.println("Messenger?: " + intent.getParcelableExtra("Messenger"));
+		
 		return mMessenger.getBinder();
 	}
 

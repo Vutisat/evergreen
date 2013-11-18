@@ -24,7 +24,22 @@ public class DataInterface {
 			if(anItem.getClippingContents() == currentItem.getClippingContents()) return;
 		}
 		this.clippedItems.addFirst(anItem);
-		this.writeClippedItemsToStorage();
+		
+		// should limit items?
+		if(this.recallSharedPreferences.getBoolean("pref_key_auto_delete", false)) {
+			
+			// get how many to store
+			int limitTo = Integer.parseInt(this.recallSharedPreferences.getString("pref_key_auto_delete_limit", "9001"));
+			
+			// remove if we surpass this value
+			if(this.clippedItems.size() > limitTo){
+				this.clippedItems.removeLast();
+			}
+			
+		}
+				
+		this.writeClippedItemsToStorage();		
+		
 	}
 
 	public ClippedItem getItem(int itemIndex) {
