@@ -88,8 +88,6 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 
 		
-		this.localClippedItems.add(new ClippedItem("Test Item"));
-		
 		// create list view for displaying items that are cached in memory locally
 		ListView listView = (ListView) findViewById(R.id.clipboardListView);
 		this.listAdapter = new ClippedItemArrayAdapter(this, this.localClippedItems);
