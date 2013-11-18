@@ -3,7 +3,6 @@
     <PreferenceCategory
         android:key="pref_key_storage_settings"
         android:title="@string/pref_storage" >
-        
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="pref_key_auto_delete"
@@ -14,19 +13,15 @@
             android:dependency="pref_key_auto_delete"
             android:key="pref_key_auto_delete_limit"
             android:summary="@string/pref_summary_delete_limit"
-            android:title="@string/pref_title_delete" />       
-        
+            android:title="@string/pref_title_delete" />
     </PreferenceCategory>
-    
     <PreferenceCategory
         android:key="pref_key_advanced_settings"
         android:title="@string/pref_advanced" >
-        
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="pref_start_on_boot"
             android:title="@string/pref_start_on_boot" />
-        
     </PreferenceCategory>
 
 </PreferenceScreen>
