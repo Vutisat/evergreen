@@ -20,6 +20,9 @@ public class DataInterface {
 	}
 
 	public void addItem(ClippedItem anItem) {
+		for(ClippedItem currentItem : this.clippedItems){
+			if(anItem.getClippingContents() == currentItem.getClippingContents()) return;
+		}
 		this.clippedItems.addFirst(anItem);
 		this.writeClippedItemsToStorage();
 	}

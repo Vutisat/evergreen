@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -101,6 +103,12 @@ public class MainActivity extends Activity {
 		ListView listView = (ListView) findViewById(R.id.clipboardListView);
 		this.listAdapter = new ClippedItemArrayAdapter(this, this.localClippedItems);
 		listView.setAdapter(this.listAdapter);
+				
+		
+		// check if the background service is running and kill it if so (no more than one at a time)
+		if(this.backgroundServiceRunning()){
+			stopService(new Intent(this, BackgroundService.class));
+		}
 		
 
 		// create an intent and use it to spawn our background process
@@ -215,6 +223,16 @@ public class MainActivity extends Activity {
 		}
 
 		return true;
+	}
+	
+	private boolean backgroundServiceRunning() {
+	    ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+	    for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+	        if (BackgroundService.class.getName().equals(service.service.getClassName())) {
+	            return true;
+	        }
+	    }
+	    return false;
 	}
 
 }

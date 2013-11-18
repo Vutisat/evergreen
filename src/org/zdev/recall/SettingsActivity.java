@@ -1,8 +1,9 @@
 package org.zdev.recall;
 
 import android.os.Bundle;
+import android.preference.EditTextPreference;
 import android.preference.PreferenceActivity;
-
+import android.text.InputType;
 
 public class SettingsActivity extends PreferenceActivity {
 
@@ -10,7 +11,10 @@ public class SettingsActivity extends PreferenceActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.pref_general);
+		addPreferencesFromResource(R.xml.pref_general);
+
+		EditTextPreference preferenceToEdit = (EditTextPreference) findPreference("pref_key_auto_delete_limit");
+		preferenceToEdit.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER);
 	}
 
 }
