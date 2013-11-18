@@ -1,12 +1,12 @@
 package org.zdev.recall;
 
 import android.annotation.SuppressLint;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ClipboardManager;
 import android.content.ClipboardManager.OnPrimaryClipChangedListener;
-import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -106,6 +106,7 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 
 		} catch (Exception e) {
 			// wat wat wat wat
+			e.printStackTrace();
 		}
 	}
 
@@ -117,30 +118,25 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 		nBuilder.setContentTitle("Recall");
 		nBuilder.setContentInfo((CharSequence) (this.dataInterface.length() + ""));
 		nBuilder.setNumber(this.dataInterface.length());
-		nBuilder.setContentText((this.dataInterface.length() == 0) ? "No items in buffer" : this.dataInterface.getItem(
-				this.dataInterface.length() - 1).getClippingContents());
+		nBuilder.setContentText((this.dataInterface.length() == 0) ? "No items in buffer" : this.dataInterface.getItem(0).getClippingContents());
 		nBuilder.setWhen(0); // hide the bloody time
 
+		nBuilder.setPriority(Notification.PRIORITY_MIN); // no icon?
+		
 		// setup return intent
 		Intent overlayIntent = new Intent(this, RecentClippingsActivity.class);
 		overlayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-		PendingIntent thePendingIntent = PendingIntent.getActivity(this, 0, overlayIntent,
-				PendingIntent.FLAG_UPDATE_CURRENT);
+		PendingIntent thePendingIntent = PendingIntent.getActivity(this, 0, overlayIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-		// only issue an intent if there are elements to display
-		if (this.dataInterface.length() > 0) {
+		// we do not need to show the user an empty list -- no purpose if
+		// there are no items
+		nBuilder.setContentIntent(thePendingIntent);
 
-			// we do not need to show the user an empty list -- no purpose if
-			// there are no items
-			nBuilder.setContentIntent(thePendingIntent);
+		if (this.dataInterface.length() > 1) {
 
-			if (this.dataInterface.length() > 1) {
-
-				// add copy intent
-				nBuilder.addAction(R.drawable.add, "Quick Copy",
-						PendingIntent.getActivity(this, 0, new Intent(this, CopyActivity.class), 0));
-
-			}
+			// add copy intent
+			nBuilder.addAction(R.drawable.add, "Quick Copy",
+					PendingIntent.getActivity(this, 0, new Intent(this, CopyActivity.class), PendingIntent.FLAG_CANCEL_CURRENT));
 
 		}
 
@@ -203,18 +199,20 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 				
 				// Get All Clippings
 				case 0:
-
-					if (activityMessenger != null) {
-
-						try {
-							Message dataMessage = new Message();
-							dataMessage.what = 0;
-							dataMessage.obj = dataInterface.getAllItems();
-							activityMessenger.send(dataMessage);
-						} catch (RemoteException e) {
-							e.printStackTrace();
-						}
-
+					try {
+						
+						// check for destination
+						Messenger toSendTo;
+						if(msg.replyTo != null) toSendTo = msg.replyTo;
+						else toSendTo = activityMessenger;
+						
+						// generate message to send
+						Message dataMessage = new Message();
+						dataMessage.what = 0;
+						dataMessage.obj = dataInterface.getAllItems();
+						toSendTo.send(dataMessage);
+					} catch (RemoteException e) {
+						e.printStackTrace();
 					}
 
 					break;
@@ -228,8 +226,6 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 				// get second-to-last
 				case 2:
 					
-					System.out.println("Message.replyto:" + msg.replyTo);
-
 					if(msg.replyTo != null){
 						Message sLastMessage = new Message();
 						sLastMessage.what = 2;
@@ -240,9 +236,12 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 							e.printStackTrace();
 						}
 					}
-					
 					break;
-					
+			
+				// remove by index
+				case 3:					
+					dataInterface.removeItem((int) msg.arg1);
+					break;
 
 				default:
 					// fuck you, you type-less piece of shit

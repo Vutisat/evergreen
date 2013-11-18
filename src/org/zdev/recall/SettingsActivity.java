@@ -13,6 +13,7 @@ public class SettingsActivity extends PreferenceActivity {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.pref_general);
 
+		// retrieve the delete limit preference and make sure it is set to numerical values only
 		EditTextPreference preferenceToEdit = (EditTextPreference) findPreference("pref_key_auto_delete_limit");
 		preferenceToEdit.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER);
 	}

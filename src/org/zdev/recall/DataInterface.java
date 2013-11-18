@@ -8,6 +8,7 @@ import android.app.Service;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 public class DataInterface {
 
@@ -59,6 +60,9 @@ public class DataInterface {
 	}
 	
 	public void removeItem(int itemIndex){
+		
+		Log.d("DataInterface", "Item Index:" + itemIndex);
+		
 		this.clippedItems.remove(itemIndex);
 		this.writeClippedItemsToStorage();
 	}
