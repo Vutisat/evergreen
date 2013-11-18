@@ -1,7 +1,6 @@
 package org.zdev.recall;
 
 import java.util.ArrayList;
-import java.util.Date;
 
 import android.app.Activity;
 import android.app.NotificationManager;
@@ -18,7 +17,6 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 public class MainActivity extends Activity {
@@ -36,9 +34,13 @@ public class MainActivity extends Activity {
 			
 			switch(msg.what) {
 				
+				// this is a response for "all data"
 				case 0:
 					
+					// coerce into an array list
 					ArrayList<ClippedItem> returnedContents = (ArrayList<ClippedItem>) msg.obj;
+					
+					
 
 					System.out.println("Main Activity Got Contents; Length:" + returnedContents.size());
 					
@@ -55,8 +57,9 @@ public class MainActivity extends Activity {
 		}
 	};
 
-	private ArrayList<String>		temporaryClippedElements	= new ArrayList<String>();
-	private ArrayAdapter<String>	listAdapter;
+	
+	private ArrayList<ClippedItem>  localClippedItems = new ArrayList<ClippedItem>();
+	private ClippedItemArrayAdapter	listAdapter;
 
 	private Messenger				incomingMessenger			= new Messenger(new IncomingHandler());
 	private Messenger				mService					= null;
@@ -78,21 +81,25 @@ public class MainActivity extends Activity {
 			}
 		};
 
+		
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		
+		this.localClippedItems.add(new ClippedItem("Test Item"));
+		
 		// create list view for displaying items that are cached in memory locally
 		ListView listView = (ListView) findViewById(R.id.clipboardListView);
-		this.listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, this.temporaryClippedElements);
+		this.listAdapter = new ClippedItemArrayAdapter(this, this.localClippedItems);
 		listView.setAdapter(this.listAdapter);
+		
 
 		// create an intent and use it to spawn our background process
 		Intent serviceIntent = new Intent(this, BackgroundService.class);
 		serviceIntent.putExtra("Messenger", this.incomingMessenger);
 		startService(serviceIntent);
-		
 
 	}
 
@@ -111,10 +118,12 @@ public class MainActivity extends Activity {
 		super.onResume();
 	}
 
+	/**
+	 * This method sends a request for the clipping list to the background
+	 * service. It does not return any data and does not manipulate the local
+	 * copy. That is done when a response message is recieved.
+	 */
 	private void retrieveStoredClippings() {
-
-		// reset local list
-		this.temporaryClippedElements = new ArrayList<String>();
 
 		try {
 			Message scRequest = new Message();
@@ -123,9 +132,6 @@ public class MainActivity extends Activity {
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
-
-		// re-rendering parent view
-		// this.listAdapter.notifyDataSetChanged();
 
 	}
 
@@ -173,7 +179,7 @@ public class MainActivity extends Activity {
 				
 				// remove all items
 				
-				// TODO:
+				// TODO: empty local array list and send message to service
 				
 				break;
 				
