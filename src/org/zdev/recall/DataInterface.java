@@ -22,23 +22,31 @@ public class DataInterface {
 
 	public void addItem(ClippedItem anItem) {
 
+		/*
+		 * TODO: implement logic in order to manage pinned items so that they
+		 * are not removed from the list and they do not count towards the total
+		 * number of items in the list
+		 */
+
 		this.clippedItems.addFirst(anItem);
-		
+
 		// should limit items?
-		if(this.recallSharedPreferences.getBoolean("pref_key_auto_delete", false)) {
-			
+		if (this.recallSharedPreferences.getBoolean("pref_key_auto_delete", false)) {
+
 			// get how many to store
-			int limitTo = Integer.parseInt(this.recallSharedPreferences.getString("pref_key_auto_delete_limit", "9001"));
-			
+			int limitTo = Integer
+					.parseInt(this.recallSharedPreferences.getString("pref_key_auto_delete_limit", "9001"));
+
 			// remove if we surpass this value
-			if(this.clippedItems.size() > limitTo){
+			if (this.clippedItems.size() > limitTo) {
+
 				this.clippedItems.removeLast();
 			}
-			
+
 		}
-				
-		this.writeClippedItemsToStorage();		
-		
+
+		this.writeClippedItemsToStorage();
+
 	}
 
 	public ClippedItem getItem(int itemIndex) {
@@ -58,24 +66,23 @@ public class DataInterface {
 		this.clippedItems.set(itemIndex, anItem);
 		this.writeClippedItemsToStorage();
 	}
-	
-	public void removeItem(int itemIndex){
-		
+
+	public void removeItem(int itemIndex) {
+
 		Log.d("DataInterface", "Item Index:" + itemIndex);
-		
+
 		this.clippedItems.remove(itemIndex);
 		this.writeClippedItemsToStorage();
 	}
-	
+
 	public void removeAll() {
 		this.clippedItems.clear();
 		this.writeClippedItemsToStorage();
 	}
-	
+
 	public ClippedItem getSecondToLast() {
 		return this.clippedItems.get(1);
 	}
-	
 
 	public int length() {
 		return this.clippedItems.size();
@@ -85,12 +92,13 @@ public class DataInterface {
 
 		try {
 			String readContents = this.recallSharedPreferences.getString("clippedItemList", null);
-			
+
 			// check for no stored items
-			if(readContents == null) return new LinkedList<ClippedItem>();
-			
+			if (readContents == null)
+				return new LinkedList<ClippedItem>();
+
 			@SuppressWarnings("unchecked")
-			LinkedList<ClippedItem> returnList =  (LinkedList<ClippedItem>) ObjectSerializer.deserialize(readContents);
+			LinkedList<ClippedItem> returnList = (LinkedList<ClippedItem>) ObjectSerializer.deserialize(readContents);
 			return returnList;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -105,16 +113,16 @@ public class DataInterface {
 
 		// get editor so we can make changes to the shared preferences
 		Editor ciEditor = this.recallSharedPreferences.edit();
-			
+
 		try {
 			ciEditor.putString("clippedItemList", ObjectSerializer.serialize(this.clippedItems));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		// write them out
 		ciEditor.commit();
-		
+
 	}
 
 	public ArrayList<ClippedItem> getAllItems() {

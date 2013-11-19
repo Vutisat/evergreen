@@ -242,6 +242,12 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 					dataInterface.removeItem((int) msg.arg1);
 					break;
 
+				// update item
+				case 4:
+					dataInterface.updateItem(msg.arg1, (ClippedItem) msg.obj);
+					break;
+					
+					
 				default:
 					// fuck you, you type-less piece of shit
 			}

@@ -45,7 +45,7 @@
             android:name="org.zdev.recall.CopyActivity"
             android:excludeFromRecents="true"
             android:launchMode="singleTask"
-            android:theme="@android:style/Theme.Holo.Light.Dialog" >
+            android:theme="@style/Theme.Transparent" >
         </activity>
 
         <receiver
