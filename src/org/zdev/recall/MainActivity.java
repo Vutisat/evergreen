@@ -22,14 +22,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.View;
 import android.widget.ListView;
 
-import android.view.GestureDetector;
-
-public class MainActivity extends Activity implements 
-	GestureDetector.OnGestureListener,
-	GestureDetector.OnDoubleTapListener {
+public class MainActivity extends Activity {
 		
 
 	/*
@@ -110,26 +105,11 @@ public class MainActivity extends Activity implements
 		// set up local messenger
 		this.incomingMessenger = new Messenger(new IncomingHandler(this));
 		
-		// gesture support
-        this.mDetector = new GestureDetectorCompat(this,this);
-        this.mDetector.setOnDoubleTapListener(this);
-		
 		// create list view for displaying items that are cached in memory locally
 		ListView listView = (ListView) findViewById(R.id.clipboardListView);
 		this.listAdapter = new ClippedItemArrayAdapter(this, this.localClippedItems);
 		listView.setAdapter(this.listAdapter);
 		listView.setClickable(true);
-		listView.setOnTouchListener(new View.OnTouchListener() {
-			
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-				//System.out.println("View: " + v.);
-				return mDetector.onTouchEvent(event);
-			}
-		});
-
-
-				
 		
 		// check if the background service is running and kill it if so (no more than one at a time)
 		if(this.backgroundServiceRunning()){
@@ -261,82 +241,11 @@ public class MainActivity extends Activity implements
 	    return false;
 	}
 
-	
-	
     @Override 
     public boolean onTouchEvent(MotionEvent event){ 
         this.mDetector.onTouchEvent(event);
         // Be sure to call the superclass implementation
         return super.onTouchEvent(event);
-    }
-
-    @Override
-    public boolean onDown(MotionEvent event) { 
-        return true;
-    }
-
-    @Override
-    public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
-    	
-    	// attempt to retrieve the item that was flicked so we can remove it
-		ListView listView = (ListView) findViewById(R.id.clipboardListView);
-		    	
-		// remove from list
-		long rowItem = listView.pointToRowId(Math.round(event1.getX()), Math.round(event1.getY()));
-		
-		//listView.
-		
-		this.localClippedItems.remove(rowItem);
-		
-		// refresh view
-		this.listAdapter.notifyDataSetChanged();
-		
-		// send to data store for persistence
-		Message toDelete = new Message();
-		toDelete.arg1 = (int) rowItem;
-		toDelete.what = 3; // delete
-		try {
-			this.mService.send(toDelete);
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
-		
-        return true;
-    }
-
-    @Override
-    public void onLongPress(MotionEvent event) {
-
-    }
-
-    @Override
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
-            float distanceY) {
-        return true;
-    }
-
-    @Override
-    public void onShowPress(MotionEvent event) {
-    }
-
-    @Override
-    public boolean onSingleTapUp(MotionEvent event) {
-        return true;
-    }
-
-    @Override
-    public boolean onDoubleTap(MotionEvent event) {
-        return true;
-    }
-
-    @Override
-    public boolean onDoubleTapEvent(MotionEvent event) {
-        return true;
-    }
-
-    @Override
-    public boolean onSingleTapConfirmed(MotionEvent event) {
-        return true;
     }
 	
 }
