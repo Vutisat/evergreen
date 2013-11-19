@@ -16,5 +16,6 @@
     <string name="pref_advanced">Advanced</string>
     <string name="pref_start_on_boot">Start on Boot</string>
     <string name="title_activity_settings">Settings</string>
+    <string name="start">Star</string>
 
 </resources>

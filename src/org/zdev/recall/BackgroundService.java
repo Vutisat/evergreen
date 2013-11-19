@@ -89,8 +89,7 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 			 */
 
 			// Get the most recent clipping off of the clipboard
-			String clippingText = new SpannableString(this.clipboardManager.getPrimaryClip().getItemAt(0).getText())
-					.toString();
+			String clippingText = new SpannableString(this.clipboardManager.getPrimaryClip().getItemAt(0).getText()).toString();
 
 			// check for a proper length and the text doesn't currently exist in
 			// memory
