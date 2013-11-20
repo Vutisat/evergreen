@@ -7,6 +7,8 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.app.NotificationManager;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -17,6 +19,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -24,9 +27,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
+import android.widget.Toast;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements OnItemClickListener {
 
 	/*
 	 * By creating a handler, we are able to listen for incoming messenges and
@@ -44,8 +49,6 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void handleMessage(Message msg) {
-
-			System.out.println("Main -- Received Message");
 
 			switch (msg.what) {
 
@@ -71,29 +74,17 @@ public class MainActivity extends Activity {
 	boolean							serviceIsBound		= false;
 
 	private ServiceConnection		mConnection			= new ServiceConnection() {
-															public void onServiceConnected(ComponentName className,
-																	IBinder service) {
-																mService = new Messenger(service);
-																serviceIsBound = true;
+			public void onServiceConnected(ComponentName className, IBinder service) {
+				mService = new Messenger(service);
+				serviceIsBound = true;
+				retrieveStoredClippings();
+			}
 
-																System.out.println("Main -- Service Bound");
-
-																retrieveStoredClippings(); // now
-																							// that
-																							// the
-																							// service
-																							// is
-																							// bound,
-																							// retrieve
-																							// data
-
-															}
-
-															public void onServiceDisconnected(ComponentName className) {
-																mService = null;
-																serviceIsBound = false;
-															}
-														};
+			public void onServiceDisconnected(ComponentName className) {
+				mService = null;
+				serviceIsBound = false;
+			}
+		};
 
 	private void setListContents(ArrayList<ClippedItem> newData) {
 		this.localClippedItems.clear();
@@ -115,6 +106,7 @@ public class MainActivity extends Activity {
 		this.listAdapter = new ClippedItemArrayAdapter(this, this.localClippedItems);
 		listView.setAdapter(this.listAdapter);
 		listView.setClickable(true);
+		listView.setOnItemClickListener(this);
 
 		// context menu
 		registerForContextMenu(listView);
@@ -268,13 +260,13 @@ public class MainActivity extends Activity {
 
 		// get list view information
 		AdapterView.AdapterContextMenuInfo listInformation = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-		
+
 		// switch over selected menu item
 		switch (item.getItemId()) {
-			
-			// delete item
+
+		// delete item
 			case 0:
-								
+
 				// send message to service deleting the item
 				try {
 					Message scRequest = new Message();
@@ -284,24 +276,24 @@ public class MainActivity extends Activity {
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
-				
+
 				// remove locally for immediate updating
 				this.localClippedItems.remove(listInformation.position);
 				this.listAdapter.notifyDataSetChanged();
-				
+
 				break;
 
 			// pin item
 			case 1:
-				
+
 				// get item and flip its state
 				ClippedItem itemContents = this.localClippedItems.get(listInformation.position);
 				itemContents.setPinnedClipping(!itemContents.isPinnedClipping());
-				
+
 				// update locally
 				this.localClippedItems.set(listInformation.position, itemContents);
 				this.listAdapter.notifyDataSetChanged();
-				
+
 				// send message to service updating the item
 				try {
 					Message scRequest = new Message();
@@ -312,10 +304,29 @@ public class MainActivity extends Activity {
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
-				
-		}
+
+		} 
 
 		return true;
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> arg0, View arg1, int position, long id) {
+		
+		// grab clipboard manager again
+		ClipboardManager cManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+
+		// create new clip and add as primary
+		ClipData newClip = ClipData.newPlainText("RecallCopy", this.listAdapter.getItem(position).getClippingContents());
+		cManager.setPrimaryClip(newClip);
+
+		// let the user know what happened
+		Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
+
+		// let's vibrate .. you know ... for fun!
+		Vibrator vService = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+		vService.vibrate(175);
+		
 	}
 
 }

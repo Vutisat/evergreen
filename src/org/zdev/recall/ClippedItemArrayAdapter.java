@@ -51,7 +51,7 @@ public class ClippedItemArrayAdapter extends ArrayAdapter<ClippedItem> {
 		
 		// is this fucker starred or what?
 		if(currentItem.isPinnedClipping()) {
-			ImageView starView = (ImageView) itemView.findViewById(R.id.isClipped);
+			ImageView starView = (ImageView) itemView.findViewById(R.id.isPinned);
 			Drawable dResource = getContext().getResources().getDrawable(R.drawable.ic_action_star);
 			starView.setImageDrawable(dResource);
 		}
