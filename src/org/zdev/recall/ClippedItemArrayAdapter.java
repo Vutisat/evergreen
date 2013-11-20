@@ -4,14 +4,15 @@ import java.util.Date;
 import java.util.List;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
+import android.graphics.Color;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.beardedhen.androidbootstrap.FontAwesomeText;
 
 public class ClippedItemArrayAdapter extends ArrayAdapter<ClippedItem> {
 
@@ -49,11 +50,17 @@ public class ClippedItemArrayAdapter extends ArrayAdapter<ClippedItem> {
 		clippingDateView.setText(DateFormat.format("MMMM d, yyyy hh:mm:ss a", new Date(currentItem.getCreationDate())));
 		
 		
+		// get icon to indicate starred status
+		FontAwesomeText starText = (FontAwesomeText) itemView.findViewById(R.id.isPinned);
+		
 		// is this fucker starred or what?
 		if(currentItem.isPinnedClipping()) {
-			ImageView starView = (ImageView) itemView.findViewById(R.id.isPinned);
-			Drawable dResource = getContext().getResources().getDrawable(R.drawable.ic_action_star);
-			starView.setImageDrawable(dResource);
+			
+			starText.setIcon("fa-star");
+			starText.setTextColor(getContext().getResources().getColor(R.color.bbutton_warning));
+			
+		} else {
+			starText.setTextColor(Color.parseColor("#aaaaaa"));
 		}
 						
 		// return the view

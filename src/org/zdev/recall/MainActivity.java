@@ -38,7 +38,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
 	 * then process them as needed.
 	 */
 	@SuppressLint("HandlerLeak")
-	private static class IncomingHandler extends Handler {
+	private class IncomingHandler extends Handler {
 
 		private MainActivity	parentReference;
 
@@ -60,6 +60,11 @@ public class MainActivity extends Activity implements OnItemClickListener {
 					ArrayList<ClippedItem> returnedContents = (ArrayList<ClippedItem>) msg.obj;
 					parentReference.setListContents(returnedContents);
 
+					// only after we have retrieved the list contents do we set this, therefore there is no flickering
+					ListView activityListView = (ListView) findViewById(R.id.clipboardListView);
+					activityListView.setEmptyView(findViewById(R.id.emptyListMain));
+
+					
 					break;
 
 			}
@@ -107,7 +112,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
 		listView.setAdapter(this.listAdapter);
 		listView.setClickable(true);
 		listView.setOnItemClickListener(this);
-
+		
 		// context menu
 		registerForContextMenu(listView);
 
@@ -250,7 +255,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
 			// set up context menu
 			menu.setHeaderTitle("Clipping Options");
 			menu.add(Menu.NONE, 0, 0, "Delete");
-			menu.add(Menu.NONE, 1, 1, (pressedItem.isPinnedClipping()) ? "Unpin" : "Pin");
+			menu.add(Menu.NONE, 1, 1, (pressedItem.isPinnedClipping()) ? "Unstar" : "Star");
 
 		}
 	}

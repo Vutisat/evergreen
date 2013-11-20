@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Recall</string>
+    <string name="window_title">Recall</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_recent_clippings">Recent Clippings</string>
@@ -17,5 +17,6 @@
     <string name="pref_start_on_boot">Start on Boot</string>
     <string name="title_activity_settings">Settings</string>
     <string name="star">Star</string>
+    <string name="noElements">There doesn\'t seem to be anything in here, copy some text?</string>
 
 </resources>

@@ -14,11 +14,11 @@
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
+        android:label="@string/window_title"
         android:theme="@style/AppTheme" >
         <activity
             android:name="org.zdev.recall.MainActivity"
-            android:label="@string/app_name"
+            android:label="@string/window_title"
             android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
