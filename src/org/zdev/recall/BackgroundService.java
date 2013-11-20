@@ -129,20 +129,24 @@ public class BackgroundService extends Service implements OnPrimaryClipChangedLi
 
 		// we do not need to show the user an empty list -- no purpose if
 		// there are no items
-		nBuilder.setContentIntent(thePendingIntent);
+		if(this.dataInterface.length() >0) {
+			nBuilder.setContentIntent(thePendingIntent);
+		}
 
 		if (this.dataInterface.length() > 1) {
-
+			
+			// Put data into intent so that we do not need the messenger
+			Intent copyIntent = new Intent(this, CopyActivity.class);
+			copyIntent.putExtra("copyText", this.dataInterface.getSecondToLast().getClippingContents());
+			
 			// add copy intent
-			nBuilder.addAction(R.drawable.add, "Quick Copy",
-					PendingIntent.getActivity(this, 0, new Intent(this, CopyActivity.class), PendingIntent.FLAG_CANCEL_CURRENT));
+			nBuilder.addAction(R.drawable.add, "Quick Copy", PendingIntent.getActivity(this, 0, copyIntent, PendingIntent.FLAG_CANCEL_CURRENT));
 
 		}
 
 		// display settings button
-		nBuilder.addAction(R.drawable.settings, "Settings",
-				PendingIntent.getActivity(this, 0, new Intent(this, SettingsActivity.class), 0));
-
+		nBuilder.addAction(R.drawable.settings, "Settings", PendingIntent.getActivity(this, 0, new Intent(this, SettingsActivity.class), PendingIntent.FLAG_CANCEL_CURRENT));
+		
 		// large view
 		NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
 		inboxStyle.setBigContentTitle("Recall");

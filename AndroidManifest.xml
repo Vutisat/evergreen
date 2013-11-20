@@ -39,12 +39,14 @@
             android:excludeFromRecents="true"
             android:label="@string/title_activity_recent_clippings"
             android:launchMode="singleTask"
+            android:taskAffinity=""
             android:theme="@android:style/Theme.Holo.Light.Dialog" >
         </activity>
         <activity
             android:name="org.zdev.recall.CopyActivity"
             android:excludeFromRecents="true"
             android:launchMode="singleTask"
+            android:taskAffinity=""
             android:theme="@style/Theme.Transparent" >
         </activity>
 
