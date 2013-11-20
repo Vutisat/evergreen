@@ -2,13 +2,15 @@ package org.zdev.recall;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.List;
 
 import android.app.Service;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 public class DataInterface {
 
@@ -18,35 +20,21 @@ public class DataInterface {
 	public DataInterface(Service parentService) {
 		this.recallSharedPreferences = PreferenceManager.getDefaultSharedPreferences(parentService);
 		this.clippedItems = this.readClippedItemsFromStorage();
+		this.cleanList();
 	}
 
 	public void addItem(ClippedItem anItem) {
-
-		/*
-		 * TODO: implement logic in order to manage pinned items so that they
-		 * are not removed from the list and they do not count towards the total
-		 * number of items in the list
-		 */
-
 		this.clippedItems.addFirst(anItem);
-
-		// should limit items?
-		if (this.recallSharedPreferences.getBoolean("pref_key_auto_delete", false)) {
-
-			// get how many to store
-			int limitTo = Integer
-					.parseInt(this.recallSharedPreferences.getString("pref_key_auto_delete_limit", "9001"));
-
-			// remove if we surpass this value
-			if (this.clippedItems.size() > limitTo) {
-
-				this.clippedItems.removeLast();
-			}
-
-		}
-
+		this.cleanList();
 		this.writeClippedItemsToStorage();
+	}
 
+	private int getPinnedCount() {
+		int pinnedCount = 0;
+		for(ClippedItem anItem : this.clippedItems){
+			if(anItem.isPinnedClipping()) pinnedCount++;
+		}
+		return pinnedCount;
 	}
 
 	public ClippedItem getItem(int itemIndex) {
@@ -64,14 +52,13 @@ public class DataInterface {
 
 	public void updateItem(int itemIndex, ClippedItem anItem) {
 		this.clippedItems.set(itemIndex, anItem);
+		this.cleanList();
 		this.writeClippedItemsToStorage();
 	}
 
 	public void removeItem(int itemIndex) {
-
-		Log.d("DataInterface", "Item Index:" + itemIndex);
-
 		this.clippedItems.remove(itemIndex);
+		this.cleanList();
 		this.writeClippedItemsToStorage();
 	}
 
@@ -86,6 +73,44 @@ public class DataInterface {
 
 	public int length() {
 		return this.clippedItems.size();
+	}
+	
+	private void cleanList() {
+		
+		// sort items
+		DataInterface.sortItems(this.clippedItems);
+
+		// should limit items?
+		if (this.recallSharedPreferences.getBoolean("pref_key_auto_delete", false)) {
+			
+			int pinnedCount = this.getPinnedCount();
+
+			// get how many to store (by adding pinned count, we exclude them)
+			int limitTo = Integer.parseInt(this.recallSharedPreferences.getString("pref_key_auto_delete_limit", "9001")) + pinnedCount;
+
+			// remove if we surpass this value
+			while(this.clippedItems.size() > limitTo){
+				this.clippedItems.removeLast();
+			}
+
+		}
+		
+	}
+	
+	public static void sortItems(List<ClippedItem> aList) {
+		Collections.sort(aList, new Comparator<ClippedItem>() {
+			@Override
+			public int compare(ClippedItem a, ClippedItem b){
+				System.out.println(a.getClippingContents() + " vs " + b.getClippingContents());
+				if(!a.isPinnedClipping() && b.isPinnedClipping()) {
+					return 1;
+				} else if(!b.isPinnedClipping() && a.isPinnedClipping()) {
+					return -1;
+				} else {
+					return (int) (b.getCreationDate() - a.getCreationDate());
+				}
+			}
+		});
 	}
 
 	private LinkedList<ClippedItem> readClippedItemsFromStorage() {

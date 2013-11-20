@@ -60,6 +60,8 @@ public class ClippedItemArrayAdapter extends ArrayAdapter<ClippedItem> {
 			starText.setTextColor(getContext().getResources().getColor(R.color.bbutton_warning));
 			
 		} else {
+			
+			// this is a greyed-out outline
 			starText.setTextColor(Color.parseColor("#aaaaaa"));
 		}
 						

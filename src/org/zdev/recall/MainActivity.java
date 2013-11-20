@@ -20,7 +20,6 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.Vibrator;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -173,10 +172,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
 	@Override
 	protected void onStart() {
 		super.onStart();
-
-		Log.d("MainActivity", "onStart");
 		bindService(new Intent(this, BackgroundService.class), this.mConnection, Context.BIND_AUTO_CREATE);
-
 	}
 
 	@Override
@@ -297,6 +293,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
 
 				// update locally
 				this.localClippedItems.set(listInformation.position, itemContents);
+				DataInterface.sortItems(this.localClippedItems);
 				this.listAdapter.notifyDataSetChanged();
 
 				// send message to service updating the item
@@ -306,6 +303,11 @@ public class MainActivity extends Activity implements OnItemClickListener {
 					scRequest.arg1 = listInformation.position;
 					scRequest.obj = itemContents;
 					this.mService.send(scRequest);
+					
+					// also, update our shit
+					Message allRequest = new Message();
+					scRequest.what = 0; // delete item
+					this.mService.send(allRequest);
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
